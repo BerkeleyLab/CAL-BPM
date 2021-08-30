@@ -1,0 +1,2 @@
+To run ChipScope first close XSDK.
+To get bus names, import BPM.runs/impl_3/debug_nets.cdc.
