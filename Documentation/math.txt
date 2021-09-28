@@ -1,0 +1,178 @@
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ S \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+G_X/S & -G_X/S & -G_X/S &  G_X/S \\
+G_Y/S &  G_Y/S & -G_Y/S & -G_Y/S \\
+G_Q/S & -G_Q/S &  G_Q/S & -G_Q/S \\
+1 & 1 & 1 & 1 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array}\right ]
+
+
+
+
+\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+ S/(4G_X) &  S/(4G_Y) &  S/(4G_Q) &  1/4 \\
+-S/(4G_X) &  S/(4G_Y) & -S/(4G_Q) &  1/4 \\
+-S/(4G_X) & -S/(4G_Y) &  S/(4G_Q) &  1/4 \\
+ S/(4G_X) & -S/(4G_Y) & -S/(4G_Q) &  1/4 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ S \\
+\end{array}\right ]
+
+
+
+\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+ 1/G_X &  1/G_Y &  1/G_Q &  1 \\
+-1/G_X &  1/G_Y & -1/G_Q &  1 \\
+-1/G_X & -1/G_Y &  1/G_Q &  1 \\
+ 1/G_X & -1/G_Y & -1/G_Q &  1 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ 1 \\
+\end{array}\right ] \cdot (S/4)
+
+
+
+a: matrix([gX/S, -gX/S,  -gX/S,  gX/S], [gY/S,  gY/S,  -gY/S,  -gY/S], [gQ/S,  -gQ/S,  gQ/S,  -gQ/S], [1,  1,  1,  1]);
+
+
+                           [ gX    gX    gX   gX  ]
+                           [ --  - --  - --   --  ]
+                           [ S     S     S    S   ]
+                           [                      ]
+                           [ gY   gY     gY    gY ]
+                           [ --   --   - --  - -- ]
+(%o1)                      [ S    S      S     S  ]
+                           [                      ]
+                           [ gQ    gQ   gQ     gQ ]
+                           [ --  - --   --   - -- ]
+                           [ S     S    S      S  ]
+                           [                      ]
+                           [ 1    1     1     1   ]
+
+
+
+                         [   S       S       S     1 ]
+                         [  ----    ----    ----   - ]
+                         [  4 gX    4 gY    4 gQ   4 ]
+                         [                           ]
+                         [    S      S        S    1 ]
+                         [ - ----   ----   - ----  - ]
+                         [   4 gX   4 gY     4 gQ  4 ]
+(%o3)                    [                           ]
+                         [    S       S      S     1 ]
+                         [ - ----  - ----   ----   - ]
+                         [   4 gX    4 gY   4 gQ   4 ]
+                         [                           ]
+                         [   S        S       S    1 ]
+                         [  ----   - ----  - ----  - ]
+                         [  4 gX     4 gY    4 gQ  4 ]
+
+
+
+
+
+
+
+
+
+
+b: matrix([0, -2*gX/S,  0,  2*gX/S], [2*gY/S,  0,  -2*gY/S,  0], [gQ/S,  -gQ/S,  gQ/S,   -gQ/S], [1,  1,  1,  1]);
+
+   
+                        [         2 gX          2 gX ]
+                        [  0    - ----    0     ---- ]
+                        [          S             S   ]
+                        [                            ]
+                        [ 2 gY            2 gY       ]
+                        [ ----    0     - ----   0   ]
+(%o5)                   [  S               S         ]
+                        [                            ]
+                        [  gQ      gQ     gQ      gQ ]
+                        [  --    - --     --    - -- ]
+                        [  S       S      S       S  ]
+                        [                            ]
+                        [  1      1       1      1   ]
+
+
+
+                         [           S       S     1 ]
+                         [   0      ----    ----   - ]
+                         [          4 gY    4 gQ   4 ]
+                         [                           ]
+                         [    S               S    1 ]
+                         [ - ----    0     - ----  - ]
+                         [   4 gX            4 gQ  4 ]
+(%o6)                    [                           ]
+                         [            S      S     1 ]
+                         [   0     - ----   ----   - ]
+                         [           4 gY   4 gQ   4 ]
+                         [                           ]
+                         [   S                S    1 ]
+                         [  ----     0     - ----  - ]
+                         [  4 gX             4 gQ  4 ]
+
+
+
+
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ S \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+    0 & -2G_X/S &    0    & 2G_X/S \\
+2G_Y/S &      0 & -2G_Y/S &      0 \\
+G_Q/S & -G_Q/S &  G_Q/S & -G_Q/S \\
+1 & 1 & 1 & 1 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array}\right ]
+
+
+
+
+\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+        0 &  S/(4G_Y) &  S/(4G_Q) &  1/4 \\
+-S/(4G_X) &         0 & -S/(4G_Q) &  1/4 \\
+        0 & -S/(4G_Y) &  S/(4G_Q) &  1/4 \\
+ S/(4G_X) &        0  & -S/(4G_Q) &  1/4 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ S \\
+\end{array}\right ]
+
+
+
+\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+     0 &  1/G_Y &  1/G_Q &  1 \\
+-1/G_X &      0 & -1/G_Q &  1 \\
+     0 & -1/G_Y &  1/G_Q &  1 \\
+ 1/G_X &      0 & -1/G_Q &  1 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ 1 \\
+\end{array}\right ] \cdot (S/4)
+

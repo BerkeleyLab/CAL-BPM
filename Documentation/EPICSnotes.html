@@ -1,0 +1,1817 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>BPM Support</title>
+  </head>
+  <body>
+    <h1>Introduction</h1>
+    This support module provides ASYN drivers to communicate with FPGA-based BPMs.<span style="font-weight: bold;"></span>&nbsp; The module consists of C
+    source and an example database.&nbsp; <br>
+    <p></p>
+<h1>Database Development
+    </h1>
+<p>The example application distributed with this support module
+      comes with a database containing all the following records and EDM
+      screens to display them.&nbsp; All record names begin with the
+      macros <span style="font-family: monospace;">$(P)$(R)</span>.&nbsp;
+
+      Only the portion of the record name following these macros are
+      shown in the following tables.&nbsp; Records with SCAN="I/O Intr" 
+should have TSE="-2" since the BPM front end provides the time 
+stamp.<br>
+</p>
+
+<h2>Serial Numbers<br>
+</h2>
+
+
+
+
+DTYP=asynInt32 and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span>
+ is a numeric value as described in the following table. The AFE serial number
+record has SCAN="Passive" since these records are processed by the <a href="#RestartRecovery">restart recovery</a>
+ mechanism whenever the IOC successfully subscribes or resubscribes to 
+the BPM.&nbsp; The DFE serial number
+record has SCAN="5 sercond" to act as a keepalive and to ensure that the
+ duplicate IOC check runs often enough.&nbsp; A serial number of 0 
+indicates that the board serial 
+number has yet to be set.&nbsp; See the hardware notes for <a href="HardwareNotes.html#SerialNumbers">instructions</a> on how to set the serial numbers.<br>
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+
+
+
+<tbody>
+<tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th><td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr><tr><td style="text-align: center;">DFEnumber<br>
+          </td><td style="text-align: center;">0x050<br>
+          </td><td style="text-align: center;">longin<br>
+  </td>
+<td style="vertical-align: top;">DFE board serial number.<br>
+  </td></tr><tr>
+  <td style="text-align: center;">AFEnumber<br>
+</td>
+  <td style="text-align: center;">0x051<span style="font-style: italic;"></span></td>
+  <td style="text-align: center;">longin<br>
+</td>
+  <td style="vertical-align: top;">AFE board serial number.</td>
+</tr>
+
+
+
+
+
+
+
+  
+
+
+</tbody>
+</table>
+
+
+
+
+
+<br>
+<h2>Revision Date and Time<br>
+</h2>
+
+
+
+DTYP=asynOctetRead and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span>
+ is a numeric value as described in the following table.&nbsp; Typically
+ SCAN="Passive" since these records are processed by the <a href="#RestartRecovery">restart recovery</a> mechanism whenever the IOC successfully subscribes or resubscribes to the BPM.
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+
+
+<tbody>
+<tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th><td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr><tr><td style="text-align: center;">firmwareRev<br>
+          </td><td style="text-align: center;">0x000<br>
+          </td><td style="text-align: center;">stringin<br>
+  </td>
+<td style="vertical-align: top;">BPM firmware revision date and time.<br>
+  </td></tr><tr>
+  <td style="text-align: center;">softwareRev</td>
+  <td style="text-align: center;">0x001<span style="font-style: italic;"></span></td>
+  <td style="text-align: center;">stringin</td>
+  <td style="vertical-align: top;">BPM software revision date and time.</td>
+</tr>
+
+
+
+
+
+
+
+  
+
+
+</tbody>
+</table>
+
+
+<br>
+
+<h2>SFP Information<br>
+</h2>
+
+
+DTYP=asynOctetRead and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span>
+ is a numeric value as described in the following table.&nbsp; The value <span style="font-style: italic;">s</span> varies from 0 through 5.&nbsp; Typically
+ SCAN="Passive" since these records are processed by the <a href="#RestartRecovery">restart recovery</a> mechanism whenever the IOC successfully subscribes or resubscribes to the BPM.
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+
+<tbody>
+<tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th><td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr><tr><td style="text-align: center;">SFP<span style="font-style: italic;">s</span>:vendorName<br>
+          </td><td style="text-align: center;">0x01<span style="font-style: italic;">s</span><br>
+          </td><td style="text-align: center;">stringin<br>
+  </td>
+<td style="vertical-align: top;">SFP vendor name.<br>
+  </td></tr><tr>
+  <td style="text-align: center;">SFP<span style="font-style: italic;">s</span>:partName</td>
+  <td style="text-align: center;">0x02<span style="font-style: italic;">s</span></td>
+  <td style="text-align: center;">stringin</td>
+  <td style="vertical-align: top;">SFP part name.<br>
+</td>
+</tr><tr>
+  <td style="text-align: center;">SFP<span style="font-style: italic;">s</span>:serialNumber</td>
+  <td style="text-align: center;">0x03<span style="font-style: italic;">s</span></td>
+  <td style="text-align: center;">stringin</td>
+  <td style=" vertical-align: middle;">SFP serial number.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">SFP<span style="font-style: italic;">s</span>:dateCode</td>
+  <td style="text-align: center;">0x04<span style="font-style: italic;">s</span></td>
+  <td style="text-align: center;">stringin</td>
+  <td style=" vertical-align: middle;">SFP manufacturing date.<br>
+  </td>
+</tr>
+
+
+
+
+
+
+
+
+
+
+  
+
+
+</tbody>
+</table>
+
+<br>
+<h2>Control Records</h2>
+
+
+
+DTYP=asynInt32 and OUT="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as described in the following table. The value <span style="font-style: italic;">c</span> varies from 0 through 3.<br>
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+
+
+<tbody>
+<tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th><td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr><tr><td style="text-align: center;">attenuation<br>
+          </td><td style="text-align: center;">0x003<br>
+          </td><td style="text-align: center;">longout<br>
+  </td>
+<td style="vertical-align: top;">AFE programmable attenuator setting (dB)<br>
+  </td></tr>
+<tr>
+  <td style="text-align: center; text-align: center; vertical-align: middle;">adcGain</td>
+  <td style="text-align: center;">0x004<span style="font-style: italic;"></span></td>
+  <td style="text-align: center;">bo</td>
+  <td style="vertical-align: top;">AFE ADC programmable gain (0 specifies gain of 1.0, 1 specifies gain of 1.5)<br>
+</td>
+</tr><tr>
+  <td style="text-align: center;"><a name="LossOfBeamThreshold"></a>lossOfBeamThreshold<br>
+  </td>
+  <td style="text-align: center;">0x005<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="vertical-align: top;">The lossOfBeamThreshold value 
+prevents nuisance triggers when the sum 
+signal is small. </td>
+</tr>
+<tr>
+  <td style="text-align: center;">autotrim:control<br>
+  </td>
+  <td style="text-align: center;">0x006<br>
+  </td>
+  <td style="text-align: center;">mbbo<br>
+  </td>
+  <td style="text-align: left;">Set the desired mode of  automatic 
+adjustment of gain compensation factors (0-Off, 1-Low pilot tone only, 
+2-High pilot tone only, 3-Dual pilot tone, 4–Dual pilot tone, time multiplexed).<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">autotrim:threshold<br>
+  </td>
+  <td style="text-align: center;">0x007<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Set pilot tone signal level below which 
+gain compensation factor updates will be inhibited.&nbsp; The FPGA 
+applies a limit of 100000 so this record can only increase the threshold
+ above that value.<br>
+  </td>
+</tr>
+
+<tr>
+  <td style="text-align: center;">selfTrigger:level<sup>1</sup><br>
+  </td>
+  <td style="text-align: center;">0x008<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td>The least significant 16 bits of this value set the threshold above which an ADC self-trigger will be 
+generated.&nbsp; This value also determines which ADC values will be 
+used in RMS mode computations.&nbsp; ADC self-triggering is disabled 
+upon the arrival of the event specified by the <a href="SoftwareNotes.html#SinglePassEvent">single pass event</a> parameter.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">buttonDSP<br>
+  </td>
+  <td style="text-align: center;">0x009<br>
+  </td>
+  <td style="text-align: center;">bo<br>
+  </td>
+  <td style="text-align: left; vertical-align: middle;">Set digital 
+signal processing algorithm used to compute button signal magnitudes 
+from ADC values.&nbsp; 0 selects I-Q synchronous demodulation (single 
+line of discrete Fourier transform).&nbsp; 1 selects RMS.&nbsp; RMS 
+processing should not be used when frequency multiplexed pilot tones are
+ present.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">FPGA:reboot<br>
+  </td>
+  <td style="text-align: center;">0x00A<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Allows the IOC to reboot the FPGA.&nbsp; This occurs when the values 0, 100 and 
+10000 are written to this record in that order.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;"><a name="filterShift"></a>autotrim:filterShift</td>
+  <td style="text-align: center;">0x00B</td>
+  <td style="text-align: center;">longout</td>
+  <td style="text-align: left;">Amount of smoothing applied during gain compensation factor 
+computation.&nbsp; The smoothing is a first-order low pass filter with pole at<math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>&nbsp; z</mi><mo>=</mo><mn>1</mn><mo>-</mo><msup><mn>2</mn><mrow><mo>-</mo><mstyle mathvariant="normal"><mrow><mi>f</mi><mi>i</mi><mi>l</mi><mi>t</mi><mi>e</mi><mi>r</mi><mi>S</mi><mi>h</mi><mi>i</mi><mi>f</mi><mi>t</mi></mrow></mstyle></mrow></msup></mrow><annotation encoding="TeX">z=1-2^{-\mathrm{filterShift}}</annotation></semantics></math> <math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><annotation encoding="TeX"></annotation></semantics></math>so a value of 0 effectively disables smoothing.<br>
+</td></tr><tr><td style="text-align: center;">ultClear<br>
+  </td>
+  <td style="text-align: center;">0x00C<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Clear latched fault status (just AFE:pllStatusLatch for now).<br>
+  </td>
+</tr>
+
+
+<tr>
+    <td style="text-align: center;">wfr:softTrigger<br>
+    </td>
+    <td style="text-align: center;">0x190<br>
+    </td>
+    <td style="text-align: center;">bo<br>
+    </td>
+    <td style="text-align: left;">Generate waveform recorder software trigger when processed.&nbsp; Value is unimportant.<br>
+    </td>
+  </tr><tr>
+  <td style="text-align: center;">ADC<span style="font-style: italic;">c</span>:gainTrim<br>
+  </td>
+  <td style="text-align: center;">0x20<span style="font-style: italic;">c</span><br>
+  </td>
+  <td style="text-align: center;">ao<br>
+  </td>
+  <td style="text-align: left;">Set gain factor 
+for ADC channel c.&nbsp; Range of values is [0..1].&nbsp; Changes are 
+effective only when autotrim:control is 'Off' and are applied only when value for ADC channel 3 is written.<br>
+  </td>
+</tr>
+
+<tr>
+  <td style="vertical-align: middle; text-align: center;"><a name="demodTbtSumShift"></a>demodTbtSumShift<sup>2</sup><br>
+  </td>
+  <td style="text-align: center;">0x000D<br>
+  </td>
+  <td style="text-align: center;">mbbo</td>
+  <td style="text-align: left;">Number of bits to shift up the 
+synchronous demodulation product before adding it to the turn-by-turn 
+accumulator.&nbsp; <span style="text-decoration: underline;"></span>
+  </td>
+</tr><tr>
+  <td style="text-align: center;">demodMtSumShift<sup>2</sup></td>
+  <td style="text-align: center;">0x000E</td>
+  <td style="text-align: center;">mbbo</td>
+  <td style="vertical-align: middle; text-align: left;">Number of bits to shift up the 
+synchronous demodulation product before adding it to the 
+the 'RF' and pilot tone accumulators.<span style="text-decoration: underline;"></span>
+  </td>
+</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+</tbody>
+</table>
+
+
+<br>
+<div style="margin-left: 40px;">
+Note 1.&nbsp; &nbsp; If the ADC readout firmware module was built with 
+the QUANTIZE parameter set to "true" the most significant 16 bits of 
+this record are a mask used to test the effect of ADC 
+quantization.&nbsp; A one in this mask forces the corresponding bit in 
+the ADC values to zero.&nbsp; For normal operation the mask should be 
+set to zero.&nbsp; If the module was built with the QUANTIZE parameter 
+unset, or set to any other value, writes to the mask value will be 
+ignored and the mask will always read back as zero.<br>
+  <br>
+Note 2.&nbsp; These records are considered experimental and may 
+migrate to the system parameters CSV file at some point.&nbsp; The 
+effect of a change in a demod<span style="font-style: italic;">xxx</span>SumShift
+ value depends on the digital 
+signal processing algorithm in use.&nbsp; If I-Q processing is enabled a
+ change of 1 in a shift value will change the associated magnitudes by a
+ factor of 2.&nbsp; If RMS processing is enabled a change of 1 in a 
+shift value will change the associated magnitudes by a factor of <math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mn>2</mn></msqrt><annotation encoding="TeX">\sqrt{2}</annotation></semantics></math>.<br>
+</div>
+
+<br>
+<h3 style="margin-left: 40px;"><a name="AutoTrim"></a>Automatic Adjustment of Gain Compensation Factors (Auto Trim)</h3>
+
+<p style="margin-left: 40px;">The gain compensation factors are adjusted 
+automatically at the end of each fast acquisition interval if the 
+following conditions have been met for 16 consecutive fast acquisition intervals:<br>
+</p>
+<ul style="margin-left: 40px;">
+  <li>The $(P)$(R)autotrim:control record is set to a value other than 'Off' (0) or 'Time Mux' (4).<br>
+</li>
+  <li>The magnitude of the chosen pilot tone signal or signals measured 
+at all four ADC channels exceeds the $(P)$(R)autotrim:threshold.</li>
+  <li>The magnitude of all four ADC channel readings from the chosen pilot tone signal or signals differ by less then a factor of two.</li>
+</ul>
+<p style="margin-left: 40px;">The gain compensation values are set to<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; <math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>i</mi></msub><mo>=</mo><mtext>MIN</mtext><mo stretchy="false">(</mo><msub><mi>b</mi><mn>0</mn></msub><mo>,</mo><msub><mi>b</mi><mn>1</mn></msub><mo>,</mo><msub><mi>b</mi><mn>2</mn></msub><mo>,</mo><msub><mi>b</mi><mn>3</mn></msub><mo stretchy="false">)</mo><mo>÷</mo><msub><mi>b</mi><mi>i</mi></msub></mrow><annotation encoding="TeX">g_i =\text{MIN}(b_0, b_1, b_2, b_3) \div  b_i</annotation></semantics></math><br>
+wher<span style="font-family: MathJax_Main,STIXGeneral,Cambria,Cambria Math,XITS,Latin Modern Math,DejaVu Serif,DejaVu Sans,Times,Lucida Sans Unicode,OpenSymbol,Standard Symbols L,serif;">e <span style="font-style: italic;">g<sub>i</sub></span> is the gain factor for ADC channel <span style="font-style: italic;">i</span> and <span style="font-style: italic;">b<sub>i</sub></span> is the pilot tone amplitude from ADC channel <span style="font-style: italic;">i</span>.</span><span style="font-family: MathJax_Main,STIXGeneral,Cambria,Cambria Math,XITS,Latin Modern Math,DejaVu Serif,DejaVu Sans,Times,Lucida Sans Unicode,OpenSymbol,Standard Symbols L,serif;">&nbsp; Gain factors</span>
+ from both pilot tones are averaged and used to compute the gain 
+compensation values if dual pilot tone correction is selected, 
+otherwise the single gain factor for the selected tone is used.&nbsp; 
+Once a full set of four gain factors has been computed the new values 
+are optionally smoothed (controlled by the <a href="#filterShift">autotrim:filterShift</a>
+ record) and used by the current fast acquisition beam position 
+computation and by subsequent turn-by-turn beam position computations.<br>
+</p>
+<p style="margin-left: 40px;">If the $(P)$(R)autotrim:control record is 
+set to 'Time Mux' (4) the pilot tones are time-multiplexed with the 
+button signals.&nbsp; Auto-trim operation proceeds as follows.
+
+</p>
+<ul style="margin-left: 40px;">
+<li>The auto-trim firmware remains idle until the arrival of an '<a href="file:///Users/wenorum/Documents/BPM/Documents/SoftwareNotes.html#RFautotrimEvent">RF auto-trim event</a>' at which point the following steps occur.</li><li>The
+ front panel RF pilot signal is enabled.&nbsp; If the $(P)$(R)buttonDSP 
+record specifies I/Q processing this will be the RF clock recovered by 
+the embedded event receiver.&nbsp; If RMS processing is enabled this 
+will be a series of ~1 ns pulses at the pilot tone acquisition interval 
+defined by the length the <a href="SoftwareNotes.html#ptTable">ptTable.csv</a> configuration file.<br>
+</li>
+  <li>After a brief pause to allow the pilot tones to stabilize the 
+pilot tone signal magnitudes are measured.&nbsp; The magnitudes are 
+computed using the algorithm selected by the $(P)$(R)buttonDSP record.<br>
+  </li>
+<li>If the magnitude constraints listed above are met the gain compensation values are set as described above.</li>
+  <li>The front panel RF pilot tone signal is disabled.</li>
+</ul>
+<p style="margin-left: 40px;">The time-multiplexed auto-trim operation 
+takes several milliseconds to complete so the event which initiates it 
+should precede the beam arrival by at least 5 milliseconds.<br>
+</p>
+
+<h3 style=" margin-left: 40px;"><a name="SinglePass"></a>Single-Pass Operation</h3>
+<p style="margin-left: 40px;">Single-pass operation is enabled by setting the “<a href="SoftwareNotes.html#SystemParameters">Single pass?</a>”
+ system parameter to a non-zero value.&nbsp; To enable self-triggered 
+single-pass acquisition set the “Single pass event” system parameter to 
+zero and the self-trigger ADC level record to an appropriate 
+value.&nbsp; To enable event-triggered acquisition set the single pass 
+event to the appropriate event and set the self-trigger ADC level record
+ to zero.&nbsp; <br>
+To guard against overloading the FPGA or IOC the single-pass trigger 
+logic disables itself for about half a second after generating a 
+trigger.<br>
+</p>
+<h3 style=" margin-left: 40px;">Loss of Beam Detection</h3>
+<p style="margin-left: 40px;">As shown in <a href="FirmwareNotes.html#LossOfBeam">this block diagram in the firmware documentation</a>, the
+ button sum turn-by-turn values are low-pass filtered with a time 
+constant of about eight turns. A loss-of-beam trigger is generated
+ when the filtered sum falls below seven-eighths of the filtered sum 64 turns
+ earlier minus the value of the $(P)$(R)lossOfBeamThreshold record.</p>
+
+<p>&nbsp; <br>
+</p>
+
+<h2><a name="RestartRecovery"></a>Restart Recovery</h2>BPM restarts are 
+accommodated by a binary-in record “$(P)$(R)sbscrb_” (SCAN="I/O Intr", 
+DTYP=asynInt32, ASYN subaddress=0x1000) which the per-BPM subscription 
+thread causes to process when a BPM subscription completes.&nbsp; The 
+binary-in record initiates the processing of a chain of fanout records 
+which in turn cause the parameter setting output records to process and 
+write their values to the BPM.&nbsp; All parameters except the waveform 
+recorder ARM records are updated.&nbsp; The firmware and software 
+revision 
+stringin records are also processed.<br>
+<br>
+The standard EPICS autosave/restore mechanism is used to reload all BPM settings on IOC restart.<br>
+<br>
+<h2>Slow Acquisition Scalar Values</h2>
+
+
+
+
+Set SCAN="I/O Intr", DTYP=asynInt32 and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as described in the following table.&nbsp; The value <span style="font-style: italic;">c </span>varies from 0 through 3.<span style="font-weight: bold;">&nbsp; </span>The records process at the slow acquisition packet arrival
+      rate (~10 Hz).<br>
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+<tbody>
+<tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th><td style="text-align: center;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr><tr><td style="text-align: center;">ADC<span style="font-style: italic;">c</span>:rfMag<br>
+          </td><td style="text-align: center;">0xB0<span style="font-style: italic;">c</span><br>
+          </td><td style="text-align: center;">longin<br>
+  </td>
+<td style="vertical-align: top;">Demodulated RF component at ADC <span style="font-style: italic;">c</span>.&nbsp; Full scale value, which results from single RF tone at maximum ADC range, is about 13e6 (32767*128*π).</td></tr><tr>
+  <td style="text-align: center;">ADC<span style="font-style: italic;">c</span>:ptLoMag</td>
+  <td style="text-align: center;">0xB1<span style="font-style: italic;">c</span></td>
+  <td style="text-align: center;">longin</td>
+  <td style="vertical-align: top;">Demodulated low frequency pilot tone component at ADC <span style="font-style: italic;">c</span>.&nbsp;&nbsp;
+ Full scale value which results from single low-frequency pilot tone at 
+maximum ADC range,  is about 13e6 (32767*128*π).</td>
+</tr>
+<tr>
+  <td style="text-align: center; vertical-align: middle;">ADC<span style="font-style: italic;">c</span>:ptHiMag</td>
+  <td style="text-align: center;">0xB2<span style="font-style: italic;">c</span></td>
+  <td style="text-align: center;">longin</td>
+  <td style="vertical-align: top;">Demodulated high frequency pilot tone component at ADC <span style="font-style: italic;">c</span>.&nbsp;&nbsp;
+ Full scale value which results from single high-frequency pilot tone at
+ maximum ADC range,  is about 13e6 (32767*128*π).</td>
+</tr>
+<tr>
+  <td style="text-align: center;">SA:X<br>
+  </td>
+  <td style="text-align: center;">0xB30<br>
+  </td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style="text-align: left;">Beam X position<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">SA:Y<br>
+  </td>
+  <td style="text-align: center;">0xB31<br>
+  </td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style="text-align: left;">Beam Y position<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">SA:Q<br>
+  </td>
+  <td style="text-align: center;">0xB32<br>
+  </td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style="text-align: left;">Result of skew computation<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">SA:S<br>
+  </td>
+  <td style="text-align: center;">0xB33<br>
+  </td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style="text-align: left;">Sum of button signals<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">SA:RMS:wide:X<br>
+  </td>
+  <td style="text-align: center;">0xB40<br>
+  </td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td>Wideband RMS beam motion in X plane.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">SA:RMS:wide:Y</td>
+  <td style="text-align: center;">0xB41</td>
+  <td style="text-align: center;">ai</td>
+  <td>Wideband RMS beam motion in Y plane.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">SA:RMS:narrow:X</td>
+  <td style="text-align: center;">0xB42</td>
+  <td style="text-align: center;">ai</td>
+  <td>Narrowband (below 200 Hz) RMS beam motion in X plane.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">SA:RMS:narrow:Y</td>
+  <td style="text-align: center;">0xB43</td>
+  <td style="text-align: center;">ai</td>
+  <td>Narrowband (below 200 Hz) RMS beam motion in Y plane.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">ADC<span style="font-style: italic;">c</span>:gainFactor</td>
+  <td style="text-align: center;">0xB9<span style="font-style: italic;">c</span></td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style=" vertical-align: middle;">ADC <span style="font-style: italic;">c</span>
+ overall gain compensation factor.&nbsp; Value is the product of the 
+gain trim factor and the gain adjustment corresponding to the channel RF
+ attenuator setting.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">Comm:CCW:channelUp<br>
+  </td>
+  <td style="text-align: center;">0xBB0</td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="vertical-align: top;">Is counterclockwise cell communication receiver link up?<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">Comm:CCW:receiving</td>
+  <td style="text-align: center;">0xBB1</td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="vertical-align: top;">Is counterclockwise cell communication receiver receiving data?<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">Comm:CW:channelUp</td>
+  <td style="text-align: center;">0xBB2</td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="vertical-align: top;">Is clockwise cell communication receiver link up?</td>
+</tr>
+<tr>
+  <td style="text-align: center;">Comm:CW:receiving</td>
+  <td style="text-align: center;">0xBB3</td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="vertical-align: top;">Is clockwise cell communication receiver receiving data?</td>
+</tr>
+<tr>
+  <td style="text-align: center;">ADC<span style="font-style: italic;">c</span>:peak</td>
+  <td style="text-align: center;">0xBC<span style="font-style: italic;">c</span></td>
+  <td style="text-align: center;">longin</td>
+  <td style=" vertical-align: middle;">Peak of absolute value of ADC <span style="font-style: italic;">c</span> reading over the past event system heartbeat interval.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">ADC<span style="font-style: italic;">c</span>:clip</td>
+  <td style="text-align: center;">0xBD<span style="font-style: italic;">c</span></td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="vertical-align: top;">Is ADC <span style="font-style: italic;">c</span> clipping?<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;"><a name="sdAccumOverflow"></a>sdAccum:overflow<br>
+  </td>
+  <td style="text-align: center;">0xBD4<br>
+  </td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="vertical-align: middle; text-align: left;">Have one or more
+ preliminary processing block synchronous demodulator accumulators 
+overflowed?&nbsp; If this happens, the value of one or both of the 
+demodulation <a href="#demodTbtSumShift">'sum shift'</a> records needs to be reduced.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">EVR:LO:sync<br>
+  </td>
+  <td style="text-align: center;">0xBE0<br>
+  </td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="text-align: left;">Is demodulator local oscillator 
+synchronized to event receiver? (0/1, unsynchronized/synchronized)&nbsp;
+ If this record is in the unsynchronized state but the slow and fast 
+acquisition timing markers are in the synchronized state and the event receiver is locked, the problem is 
+likely that the RF local oscillator table has in incorrect number of 
+lines.<br>
+</td>
+</tr>
+
+<tr>
+  <td style="text-align: center;">EVR:LossOfLock</td>
+  <td style="text-align: center;">0xBE1<br>
+  </td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="text-align: left; vertical-align: middle;">Set when the EVR clock/data recovery is unable to obtain lock.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">EVR:AFEref:sync<br>
+  </td>
+  <td style="text-align: center;">0xBE2</td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="vertical-align: top;">Is the FPGA logic which generates the AFE PLL reference clock synchronized to EVR heartbeat event?&nbsp; 
+(0/1, unsynchronized/synchronized)</td>
+</tr>
+<tr>
+  <td style="text-align: center;">AFE:pllStatusLatch<br>
+  </td>
+  <td style="text-align: center;">0xBE4<br>
+  </td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="text-align: left; vertical-align: middle;">Latched version 
+of AFE:pllStatus.&nbsp; Unlike all the other records in this table which
+ process on the arrival of slow acquisition packets from the BPM this 
+record processes only when the value from the BPM changes.&nbsp; The 
+result is that this record's time stamp reflects the latest change of 
+state.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">EVR:SA:sync<br>
+  </td>
+  <td style="text-align: center;">0xBE5</td>
+  <td style="text-align: center;">bi</td>
+  <td style="text-align: left;">Is slow acquisition timing marker synchronized to event receiver? (0/1, unsynchronized/synchronized)<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">EVR:FA:sync</td>
+  <td style="text-align: center;">0xBE6</td>
+  <td style="text-align: center;">bi</td>
+  <td style="text-align: left;">Is fast acquisition timing marker synchronized to event receiver? (0/1, unsynchronized/synchronized)</td>
+</tr>
+<tr>
+  <td style="text-align: center;">AFE:pllStatus<br>
+  </td>
+  <td style="text-align: center;">0xBE7</td>
+  <td style="text-align: center;">bi</td>
+  <td style=" vertical-align: middle;">Is AFE PLL locked? (0/1, locked/unlocked)&nbsp; Value is always 0 (locked) when system is in <a href="SoftwareNotes.html#ExternalClockMode">external clock mode</a>.<br>
+  </td>
+</tr><tr>
+  <td style="text-align: center;">autotrim:status<br>
+  </td>
+  <td style="text-align: center;">0xBE8<br>
+  </td>
+  <td style="text-align: center;">mbbi<br>
+  </td>
+  <td style="vertical-align: top;">Status of automatic gain compensation
+ factor updates.&nbsp; Values are Disabled, No Tones, Excess Variation, Active.&nbsp; The 'Excess Variation' state indicates
+ that the strongest and weakest pilot tone signals from the four buttons 
+vary by more than a factor of two.<br>
+  </td>
+</tr><tr>
+  <td style="text-align: center;">LogStatus<br>
+  </td>
+  <td style="text-align: center;">0xBEF<br>
+  </td>
+  <td style="text-align: center;">mbbi<br>
+  </td>
+  <td style="text-align: left; vertical-align: middle;">Status of slow acquisition data logging.<br>
+  </td>
+</tr><tr>
+  <td style="text-align: center;">SD:RF:unsync</td>
+  <td style="text-align: center;">0xBF0<br>
+  </td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="text-align: left;">Has synchronous demodulation RF strobe 
+lost&nbsp; synchronization?&nbsp; If so, it indicates that the 
+synchronous demodulation interval set by the RF demodulation table 
+length doesn't evenly fit into three heartbeat intervals.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">SD:PT:unsync</td>
+  <td style="text-align: center;">0xBF1</td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="text-align: left;">Has the synchronous demodulation pilot 
+tone 
+strobe lost synchronization?&nbsp; If so, it indicates that  the 
+synchronous demodulation interval set by the pilot tone demodulation 
+table length doesn't evenly fit into three heartbeat intervals.
+  </td>
+</tr>
+
+
+
+
+  
+
+
+</tbody>
+</table>
+<br>
+The RMS beam motion values are computed from the fast acquisition beam 
+position measurements through a first-order high-pass filter with cutoff
+ frequency 0.78 Hz.&nbsp; If the values are much larger than expected 
+it's an indication that the selected number of turns per RF demodulation
+ (<a href="#demodRfTurns">demodRfTurns</a>) does not divide evenly into the number of turns per fast acquisition interval.<br>
+<br>
+In <a href="#SinglePass">single-pass</a> mode the Slow Acquisition 
+records hold the single-pass values.&nbsp; The Slow Acquisition records 
+process whenever a single-pass trigger (self-triggered or event) occurso
+ or if no trigger occurs then after each time-multiplexed pilot tone 
+update if enabled or finally after every other heartbeat event.<br>
+<br>
+The raw SA data stream is provided in a waveform record with name suffix
+ "rawSAdata", SCAN="I/O Intr", DTYP=asynInt8ArrayIn and 
+INP="@asyn($(PORT) 0 0)").&nbsp; This record also processes at the slow acquisition packet arrival
+      rate (~10 Hz).
+<h2>System Monitor Scalar Values</h2>
+
+
+Set SCAN="I/O Intr", DTYP=asynInt32 and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as described in the following table.&nbsp; <span style="font-weight: bold;"></span>The records&nbsp; process at the packet arrival
+      rate (~0.5 Hz).<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+
+<tbody>
+<tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th><td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr><tr><td style="text-align: center;">FPGA:temperature<br>
+          </td><td style="text-align: center;">0xA00<br>
+          </td><td style="text-align: center;">ai<br>
+  </td>
+<td style="text-align: left;">FPGA core temperature<br>
+  </td></tr><tr>
+  <td style="text-align: center;">FPGA:coreV</td>
+  <td style="text-align: center;">0xA01<br>
+</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">FPGA core voltage<br>
+</td>
+</tr>
+<tr>
+  <td style="text-align: center;">FPGA:auxV</td>
+  <td style="text-align: center;">0xA02<span style="font-style: italic;"></span></td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style="text-align: left;">FPGA auxiliary voltage<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">DFE:boardV<br>
+  </td>
+  <td style="text-align: center;">0xA03<br>
+  </td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style="text-align: left;">DFE board voltage<br>
+</td>
+</tr>
+<tr>
+  <td style="text-align: center;">DFE:fanRPM</td>
+  <td style="text-align: center;">0xA07</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">DFE board fan speed<br>
+</td>
+</tr>
+<tr>
+  <td style="text-align: center;">AFE:adcRate<br>
+  </td>
+  <td style="text-align: center;">0xA08</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">AFE board ADC sampling rate.&nbsp; Raw 
+value is number of ADC clocks in 1/16th of a second.&nbsp; The ‘1 PPS’ 
+event is used as the reference.&nbsp; A value of 0 indicates a missing 
+ADC clock or  ‘1 PPS’ event.
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">AFE:adcClkDelay<br>
+  </td>
+  <td style="text-align: center;">0xA09<br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="text-align: left;">FPGA IODELAYE1 element adjustable delay on ADC clock from AFE<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;"><a name="FOFBindex"></a>FOFBindex<br>
+  </td>
+  <td style="text-align: center;">0xA0A<br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="text-align: left;">Index into fast orbit feedback X/Y position vectors at which data from this BPM will be placed.&nbsp; Set by <a href="#bpmConfigure">bpmConfigure</a> command at IOC startup.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">EVRtooFew</td>
+  <td style="text-align: center;">0xA0B</td>
+  <td style="text-align: center;">longin</td>
+  <td style="text-align: left;">Number of times that there were too few time-of-day events between EVR 'Pulse Per Second' events.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">EVRtooMany</td>
+  <td style="text-align: center;">0xA0C</td>
+  <td style="text-align: center;">longin</td>
+  <td style="text-align: left;">Number of times that there were too many time-of-day events between EVR 'Pulse Per Second' events.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">EVRoutOfSeq</td>
+  <td style="text-align: center;">0xA0D</td>
+  <td style="text-align: center;">longin</td>
+  <td style="text-align: left;">Number of times that non-sequential values of time-of-day events occurred.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">duplicateIOC<br>
+  </td>
+  <td style="text-align: center;">0xA0E<br>
+  </td>
+  <td style="text-align: center;">bi<br>
+  </td>
+  <td style="vertical-align: middle; text-align: left;">Set when BPM detects more than one IOC attempting communication.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">DFE:<span style="font-style: italic;">x</span>:temperature</td>
+  <td style="text-align: center;">0xA1<span style="font-style: italic;">x</span></td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">DFE board temperature sensor <span style="text-decoration: underline;"><span style="font-style: italic;"></span></span><span style="font-style: italic;">x</span> (<span style="font-style: italic;">x</span> ranges from 0 to 3)<br>
+</td>
+</tr>
+<tr>
+  <td style="text-align: center;">AFE:<span style="font-style: italic;">x</span>:temperature</td>
+  <td style="text-align: center;">0xA2<span style="font-style: italic;">x</span></td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">AFE board temperature sensor <span style="text-decoration: underline;"><span style="font-style: italic;"></span></span><span style="font-style: italic;">x</span> (<span style="font-style: italic;">x</span> ranges from 0 to 7)</td>
+</tr><tr>
+    <td style="text-align: center;">AFE:supply:V<span style="font-style: italic;">x</span></td>
+    <td style="text-align: center;">0xA3<span style="font-style: italic;">x</span></td>
+    <td style="text-align: center;">ai</td>
+    <td style="text-align: left;">AFE board voltage <span style="text-decoration: underline;"><span style="font-style: italic;"></span></span><span style="font-style: italic;">x</span> (<span style="font-style: italic;">x</span> ranges from 0 to 2)</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;">AFE:supply:I<span style="font-style: italic;">x</span></td>
+    <td style="text-align: center;">0xA3<span style="font-style: italic;">y</span></td>
+    <td style="text-align: center;">ai</td>
+    <td style="text-align: left;">AFE board current <span style="text-decoration: underline;"><span style="font-style: italic;"></span></span><span style="font-style: italic;">x</span> (<span style="font-style: italic;">x</span> ranges from 0 to 2, <span style="font-style: italic;">y</span> from 3 to 5)</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;">SFP<span style="font-style: italic;">x</span>:rxPower<br>
+    </td>
+    <td style="text-align: center;">0xA5<span style="font-style: italic;">x</span><br>
+    </td>
+    <td style="text-align: center;">ai<br>
+    </td>
+    <td style="text-align: left;">SFP module <span style="font-style: italic;">x</span> received power (<span style="font-style: italic;">x</span> ranges from 0 to 5)</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;">SFP<span style="font-style: italic;">x</span>:temperature</td>
+    <td style="text-align: center;">0xA6<span style="font-style: italic;">x</span></td>
+    <td style="text-align: center;">ai<br>
+    </td>
+    <td style="text-align: left;">SFP module <span style="font-style: italic;">x</span> temperature (<span style="font-style: italic;">x</span> ranges from 0 to 5)</td>
+  </tr><tr>
+  <td style="text-align: center;">CRCfaultsCCW<br>
+  </td>
+  <td style="text-align: center;">0xA70<br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="vertical-align: top;">Number of receiver CRC faults on CCW link.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">CRCfaultsCW</td>
+  <td style="text-align: center;">0xA71</td>
+  <td style="text-align: center;">longin</td>
+  <td style="text-align: left;">Number of receiver CRC faults on CW link.</td>
+</tr>
+
+  
+
+
+  
+
+
+</tbody>
+</table>
+
+<br>
+<h2>Statistics</h2>
+
+
+
+Set SCAN="10 second", DTYP=asynInt32 and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as described in the following table.<br>
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td style="text-align: center;"><span style="font-weight: bold;">Name</span><br>
+      </td>
+      <td style="text-align: center;"><span style="font-weight: bold;">ASYN<br>
+Subaddress<br>
+        </span></td>
+      <td style="text-align: center;"><span style="font-weight: bold;">Record<br>
+Type<br>
+        </span></td>
+      <td style="text-align: center;"><span style="font-weight: bold;">Description</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">Cmd<span style="font-style: italic;">x</span>RetryCount<br>
+      </td>
+      <td style="text-align: center;">0xCA<span style="font-style: italic;">x</span><br>
+      </td>
+      <td style="text-align: center;">longin<br>
+      </td>
+      <td style="text-align: left;">Number of commands accepted after <span style="font-style: italic;">x</span> retries (<span style="font-style: italic;">x</span> ranges from 0 to 4).<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">CmdFailedCount<br>
+      </td>
+      <td style="text-align: center;">0xCA5<br>
+      </td>
+      <td style="text-align: center;">longin<br>
+      </td>
+      <td style="text-align: left;">Number of commands that were abandoned because of too many retry attempts.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;"><span style="font-style: italic;">pktype</span>:nGood<br>
+      </td>
+      <td style="text-align: center;">0xC<span style="font-style: italic;">x</span>1<br>
+      </td>
+      <td style="text-align: center;">longin<br>
+      </td>
+      <td style="text-align: left;">Number of <span style="font-style: italic;">pktype</span> packets successfully received where <span style="font-style: italic;">pktype</span> is <span style="font-weight: bold;">sysmon</span> (<span style="font-style: italic;">x</span>=1) or <span style="font-weight: bold;">SA </span>(<span style="font-style: italic;">x</span>=2).<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;"><span style="font-style: italic;">pktype</span>:nUnseq</td>
+      <td style="text-align: center;">0xC<span style="font-style: italic;">x</span>2</td>
+      <td style="text-align: center;">longin</td>
+      <td style="text-align: left;">Number of <span style="font-style: italic;">pktype</span> packets received out of order.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;"><span style="font-style: italic;">pktype</span>:nDuplicate</td>
+      <td style="text-align: center;">0xC<span style="font-style: italic;">x</span>3</td>
+      <td style="text-align: center;">longin</td>
+      <td style="text-align: left;">Number of duplicate <span style="font-style: italic;">pktype</span> packets.</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;"><span style="font-style: italic;">pktype</span>:nLost</td>
+      <td style="text-align: center;">0xC<span style="font-style: italic;">x</span>4</td>
+      <td style="text-align: center;">longin</td>
+      <td>Number of missing <span style="font-style: italic;">pktype</span> packets.</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:nStarted<br>
+      </td>
+      <td style="text-align: center;">0xC<span style="font-style: italic;">y</span>1<br>
+      </td>
+      <td style="text-align: center;">longin<br>
+      </td>
+      <td>Number of waveform transfers initiated for waveform recorder <span style="font-style: italic;">rec</span>, where <span style="font-style: italic;">rec</span> is one of <span style="font-weight: bold;">ADC</span> (<span style="font-style: italic;">y</span>=4),&nbsp;<span style="font-weight: bold;">TBT</span> (<span style="font-style: italic;"></span>y=5), <span style="font-weight: bold;">FA</span> (<span style="font-style: italic;">y</span>=6), PL (<span style="font-style: italic;"></span>y=7), <span style="font-weight: bold;">PH</span> (<span style="font-style: italic;">y</span>=8). </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:nCompleted</td>
+      <td style="text-align: center;">0xC<span style="font-style: italic;"></span><span style="font-style: italic;">y</span>2</td>
+      <td style="text-align: center;">longin</td>
+      <td>Number of waveform transfers completed for waveform recorder <span style="font-style: italic;">rec</span>. </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:rate</td>
+      <td style="text-align: center;">0x<span style="font-style: italic;"></span>C<span style="font-style: italic;">y</span>3</td>
+      <td style="text-align: center;">ai<br>
+      </td>
+      <td style=" vertical-align: middle;">Rate (kB/s) of most recent waveform transfer.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2>Cell Data Stream Filters<br>
+</h2>
+
+
+
+
+The fast acquisition X and Y position values are filtered before being 
+passed to the cell communication block.&nbsp; Each plane has its own 
+300-tap FIR filter.&nbsp; The default filter coefficients provide a 
+second order Butterworth low pass response with 60 Hz 
+cutoff.&nbsp;&nbsp; The default coefficients can be overridden by 
+writing to the $(P)$(R)cellFilterX or $(P)$(R)cellFilterY waveform 
+records.&nbsp; The waveform records contain the 300 filter taps as 
+double-precision floating point values in the range [-1,1).&nbsp; Values
+ outside that range are clipped.&nbsp; To avoid overflows in the 
+computation the sum of all 300 values should also be in the range 
+[-1,1].&nbsp;&nbsp; To maintain the standard position scaling of 1 nm 
+per count the sum of all 300 values should be 1 since the sum of all 
+tap values sets the filter DC gain.&nbsp; <br>
+<br>
+The fast acquisition recorder can be used to monitor the outputs or the 
+tap coefficient values of the cell data stream filters.&nbsp; Since 
+these are rather esoteric modes of operation they are now accessible only by setting appropriate <a href="SoftwareNotes.html#CellFilterDiagnosticBits">debug mode</a> bits.&nbsp; A script to automate the process of reading the tap coefficient values is provided with the support module.<br>
+<h2>Event Receiver<br>
+</h2>
+
+
+
+The BPM firmware includes an embedded event receiver for maintaining 
+synchronization with the beam and other diagnostics.&nbsp; Four of the 
+trigger outputs are made available for triggering the waveform 
+recorders.&nbsp; DTYP=asynInt32 and OUT="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as described in the following table.
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+
+<tbody>
+<tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th><td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr><tr><td style="text-align: center;">EVR:delay<span style="font-style: italic;">x</span><br>
+          </td><td style="text-align: center;">0x40<span style="font-style: italic;">x</span><br>
+          </td><td style="text-align: center;">longout<br>
+  </td>
+<td style="vertical-align: top;">Delay, in steps of four times the RF reference clock interval, on event receiver trigger output <span style="font-style: italic;">x</span> (<span style="font-style: italic;">x</span>
+ values are 0, 1 and 4 through 7).&nbsp; Trigger output 0 is driven by 
+the 
+timing system heartbeat event thus EVR:delay0 sets the 
+location of the turn marker ("bucket 1").&nbsp; Trigger output 1 
+provides the trigger for single-pass BPM operation.&nbsp; Single-pass 
+operation is enabled by setting the “Single pass event” <a href="SoftwareNotes.html#SystemParameters">system parameter</a> to a valid event number (1 through 254).<br>
+  </td></tr><tr>
+  <td style="text-align: center;">EVR:event<span style="font-style: italic;">x</span>trig</td>
+  <td style="text-align: center;">0x3<span style="font-style: italic;">yy</span><br>
+</td>
+  <td style="text-align: center;">longout</td>
+  <td style="vertical-align: top;">Specify the waveform recorder trigger line(s) to activate when event <span style="font-style: italic;">x</span> arrives.&nbsp; <span style="font-style: italic;">x</span> varies from 1 through 254, <span style="font-style: italic;">yy</span> from 01 through FE.&nbsp; Only bits 4 through 7 are used.&nbsp; See the <a href="#WaveformRecorders">waveform recorder</a> or <a href="FirmwareNotes.html#EVRtriggerOutputs">firmware</a> documentation for details.<br>
+</td>
+</tr>
+
+
+
+
+
+
+
+  
+
+
+</tbody>
+</table>
+
+<br>
+
+<h2><a name="WaveformRecorders"></a>Waveform Recorders</h2>
+There are five waveform recorders providing raw ADC samples, 
+turn-by-turn position samples, fast acquisition position samples, low 
+pilot tone magnitudes, and high pilot tone magnitudes, respectively.<span style="font-weight: bold;">&nbsp; </span>The
+ ADC 
+recorder provides four 16 bit waveforms.&nbsp; The pilot tone recorders 
+provide four 32 bit waveforms of the button pilot tone signal 
+magnitudes.&nbsp; The other recorders 
+also provide four 32 bit waveforms, namely the X and Y position in 
+nanometers, the skew (Q) in parts per million, and the sum (S) of the 
+four button signal magnitudes.&nbsp; These units are also the units of 
+.RVAL fields of the corresponding slow acquisition (SA) channels.&nbsp; 
+In single-pass mode the turn-by-turn recorder can be used to acquire 
+values from a sequence of single shots.<br>
+
+<h3><span style="font-weight: bold;">Conrol/Status records</span></h3>
+<p>DTYP is asynInt32 except as noted.&nbsp; INP and OUT fields are are described above.&nbsp; In the following table, <span style="font-style: italic;">rec</span> is one of ADC, TBT, FA, PL, or PH, and <span style="font-style: italic;">r</span> is 0 through 4.<br>
+</p>
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:arm<br>
+          </td>
+          <td style="text-align: center;">0x10<span style="font-style: italic;">r</span><br>
+          </td>
+          <td style="text-align: center; vertical-align: middle;">bo<br>
+  </td>
+<td style="vertical-align: top;">Disarm/Arm (0/1) the recorder.<br>
+          </td>
+        </tr><tr>
+    <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:triggerMask</td>
+    <td style="text-align: center;">0x11<span style="font-style: italic;">r</span><br>
+    </td>
+    <td style="text-align: center;">longout<br>
+    </td>
+    <td style="vertical-align: top;">Enable trigger source <span style="font-style: italic;">n</span> as described in following table.&nbsp; DTYP=asynUInt32Digital.<br>
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:pretrigCount</td>
+    <td style="text-align: center;">0x12<span style="font-style: italic;">r</span></td>
+    <td style="text-align: center;">longout<br>
+    </td>
+    <td style="vertical-align: top;">Number of pre-trigger 
+samples.&nbsp; The maximum value for the turn-by-turn and fast-acquisition recorders depends upon the values specified in 
+the bpmConfigure and dbLoadRecords commands.&nbsp;&nbsp;<span style="font-weight: bold;">&nbsp; </span>The maximum value for the ADC waveform recorder is 3080 samples.<br>
+</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:acqCount</td>
+    <td style="text-align: center;">0x13<span style="font-style: italic;">r</span></td>
+    <td style="text-align: center;">longout</td>
+    <td style="vertical-align: top;">Number of samples to 
+acquire.&nbsp; The maximum value depends upon the values specified in 
+the bpmConfigure and dbLoadRecords commands. <br>
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:armed</td>
+    <td style="text-align: center;">0x1C<span style="font-style: italic;">r</span></td>
+    <td style="text-align: center;">bi<br>
+    </td>
+    <td style="vertical-align: top;">Recorder status.&nbsp; Scan="I/O Intr".&nbsp; Value updated at slow acquisition rate (~10 Hz).<br>
+    </td>
+  </tr><tr>
+  <td style="text-align: center;">wfr:<span style="font-style: italic;">rec</span>:NORD</td>
+  <td style="text-align: center;">–<br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style=" vertical-align: middle;">Value obtained from NORD field of
+ waveform record and forward linked from that waveform record.&nbsp; 
+Provided to allow clients to receive monitors on waveform record NORD 
+field changes.<br>
+  </td>
+</tr><tr>
+  <td style="text-align: center;">wfr:ADC:DataMode<br>
+  </td>
+  <td style="text-align: center;">0x140<br>
+  </td>
+  <td style="text-align: center;">bo<br>
+  </td>
+  <td style="text-align: left; vertical-align: middle;">Place ADC 
+waveform recorder into Normal/Test (0/1) mode.&nbsp; In ‘Test’ mode the 
+values recorded are those going to the preliminary processing block rather 
+than those coming from the ADC input latches.&nbsp; The LSBs of the 
+recorder channels are overridden as follows.<br>
+    <ul>
+      <li>Channel 0 LSB – Preliminary processing multi-turn ‘Load and Latch’ line.</li>
+<li>Channel 1 LSB – Preliminary processing turn-by-turn ‘Latch’ line.</li>
+
+      <li>Channel 2 LSB – Preliminary processing turn-by-turn ‘Load’ line.</li>
+      <li>Channel 3 LSB – ‘Use this sample’ line.&nbsp; </li>
+    </ul>
+  </td>
+</tr>
+
+
+
+      </tbody>
+    
+</table>
+<br>
+Changes to the pre-trigger and acquisition sample count registers take 
+place only on disarmed to armed transitions.&nbsp; Changes to the 
+trigger mask take place whenever a 1 is written to the wfr:<span style="font-style: italic;">rec</span>:arm record, even if
+ the recorder is already armed.&nbsp; Attempts to set an acquisition 
+count less than the 
+pre-trigger count 
+for the turn-by-turn and fast-acquisition recorders will result in the 
+recorder firmware limiting the pre-trigger 
+count to the acquisition count.&nbsp; Setting the acquisition count less
+ than the 
+pre-trigger count 
+for the ADC recorder is allowable, but results in a waveform record 
+whose time stamp is later than any sample in the acquired data.<br>
+<br>
+The data recorded when the wfr:ADC:DataMode record is in the ‘Test’ mode
+ are useful for checking the operation of both transport line and ring 
+BPMs.&nbsp; In the latter case the ‘Load’ and ‘Latch’ markers will be 
+coincident and show the first sample used to compute the turn-by-turn 
+values.&nbsp; This provides an easy mechanism for choosing the best 
+value for the “Bucket 1 Offset” event receiver delay.&nbsp; Note that 
+the multiplier blocks in the preliminary processing have a one clock 
+latency so the first sample to be included in a new summation is the 
+sample one before the sample for which the ‘Load’ line is 
+asserted.&nbsp; The test mode is necessary since the asynchronous clock 
+domain of the ADC record and its burst-mode write operation means that 
+the actual delay between the trigger condition and the first sample 
+recorded will exhibit some variation.&nbsp; The presence of the marker 
+bits can be used to remove this ambiguity.<br>
+<br>
+The bits in the wfr:<span style="font-style: italic;">rec</span>:triggerMask longout records are described 
+below.&nbsp; A cleared bit means that that trigger source will be 
+ignored.&nbsp; More than one bit can be set, in which case any of the 
+unmasked trigger sources will trigger the recorder (i.e. a logical OR of
+ the unmasked sources).<br>
+<br>
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td style="text-align: center;"><span style="font-weight: bold;">Bit</span></td>
+      <td style="text-align: center;"><span style="font-weight: bold;">Description</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-align: center;">0<br>
+      </td>
+      <td style="text-align: left;">Soft trigger.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-align: center;">1<br>
+      </td>
+      <td style="text-align: left;">Loss of beam trigger.&nbsp; See<span style="text-decoration: underline;"> <a href="#LossOfBeamThreshold">lossOfBeamThreshold record</a></span> for details.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-align: center;">2<br>
+      </td>
+      <td style="text-align: left;"><a href="#SinglePass">Single-pass</a>
+ (event or ADC threshold) trigger.&nbsp; This trigger is available even 
+when the BPM is not configured for single-pass operation.&nbsp; This 
+trigger is inhibited when the time-multiplexed pilot tone is active.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-align: center;">3<br>
+      </td>
+      <td style="text-align: left;">Reserved.&nbsp; May be used for front-panel LVDS input trigger.
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-align: center;">4<br>
+      </td>
+      <td style="text-align: left;">Event receiver trigger output 4.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-align: center;">5<br>
+      </td>
+      <td style="text-align: left;">Event receiver trigger output 5.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-align: center;">6</td>
+      <td style="text-align: left;">Event receiver trigger output 6.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-align: center;">7</td>
+      <td style="text-align: left;">Event receiver trigger output 7.</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<br>
+The steps taken by the firmware to complete an acquisition are:<br>
+<ol>
+  <li>Wait until recorder is armed (until 1 is written to the wfr:<span style="font-style: italic;">rec</span>:arm record).</li>
+  <li>Wait until wfr:<span style="font-style: italic;">rec</span>:preTrigCount samples have been acquired.</li>
+  <li>Wait until the rising edge of an enabled trigger line.</li>
+  <li>Wait until the next ADC sample, turn update or fast acquisition update as appropriate.</li>
+  <li>Acquire wfr:<span style="font-style: italic;">rec</span>:acqCount−wfr:<span style="font-style: italic;">rec</span>:preTrigCount more samples.</li>
+  <li>Set the “acquisition complete” flag.</li>
+</ol>
+<p><br>
+</p>
+
+<span style="font-weight: bold;"></span>
+<h3><span style="font-weight: bold;">Waveform records</span></h3>
+
+<p>The time stamp in the waveform records 
+corresponds to the time at which 
+the trigger occurred.&nbsp; The pre-trigger samples, if any, occurred 
+before the time stamp value.&nbsp; Time stamps for all channels of an 
+acquisition for a single recorder are identical.&nbsp; The data 
+acquisition firmware uses different clocks than the event receiver so 
+waveform record time stamps can differ from event receiver time stamps 
+by up to 30 ns.<br>
+</p>
+<p>The synchronous demodulation and position calculation pipeline is 
+about 60 clock cycles deep so the first waveform value after the trigger
+ corresponds to data acquired about 600 ns earlier.&nbsp; This is not 
+terribly significant for the fast-acquisition data, but represents 
+almost a full turn of storage ring turn-by-turn data and over two turns 
+of booster ring turn-by-turn data.<br>
+
+</p>
+
+
+<span style="font-weight: bold;">
+  
+</span>
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+<tbody><tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <td style="text-align: center;"><span style="font-weight: bold;">Alias</span><br>
+</td>
+<th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:ADC:c0<br>
+          </td>
+          <td style="text-align: center;">wfr:ADC:D</td>
+<td style="text-align: center;">0x00<br>
+          </td>
+          <td style="text-align: left;">ADC channel 0.<br>
+</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:ADC:c1
+          </td>
+          <td style="text-align: center;">wfr:ADC:B
+          </td>
+<td style="text-align: center;">0x01</td>
+          <td style="text-align: left;">ADC channel 1.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:ADC:c2
+          </td>
+          <td style="text-align: center;">wfr:ADC:C
+          </td>
+<td style="text-align: center;">0x02<br>
+          </td>
+          <td style="text-align: left;">ADC channel 2.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:ADC:c3</td>
+          <td style="text-align: center;">wfr:ADC:A</td>
+<td style="text-align: center;">0x03<br>
+          </td>
+          <td style="text-align: left;">ADC channel 3.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:TBT:c0</td>
+          <td style="text-align: center;">wfr:TBT:X</td>
+<td style="text-align: center;">0x10<span style="font-style:
+              italic;"></span></td>
+          <td style="text-align: left;">Turn-by-turn X position (nm).<br>
+</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:TBT:c1
+          </td>
+          <td style="text-align: center;">wfr:TBT:Y</td>
+<td style="text-align: center;">0x11<span style="font-style:
+              italic;"></span>
+          </td>
+          <td style="text-align: left;">Turn-by-turn Y position (nm).
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:TBT:c2<span style="font-style: italic;"></span></td>
+          <td style="text-align: center;">wfr:TBT:Q</td>
+<td style="text-align: center;">0x12<span style="font-style:
+              italic;"></span></td>
+          <td style="text-align: left;">Turn-by-turn skew.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:TBT:c3<span style="font-style: italic;"></span></td>
+          <td style="text-align: center;">wfr:TBT:S</td>
+<td style="text-align: center;">0x13<span style="font-style:
+              italic;"></span></td>
+          <td style="text-align: left;">Turn-by-turn sum.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:FA:c0
+          </td>
+          <td style="text-align: center;">wfr:FA:X
+          </td>
+<td style="text-align: center;">0x20<br>
+          </td>
+          <td style="text-align: left;">Fast acquisition X position (nm).
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:FA:c1
+          </td>
+          <td style="text-align: center;">wfr:FA:Y</td>
+<td style="text-align: center;">0x21<br>
+</td>
+          <td style="text-align: left;">Fast acquisition Y position (nm).
+          
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:FA:c2<span style="font-style: italic;"></span></td>
+          <td style="text-align: center;">wfr:FA:Q</td>
+<td style="text-align: center;">0x22<br>
+          </td>
+          <td style="text-align: left;">Fast acquisition skew, or filtered fast acquisition X position, or impulse response of X position cell data stream filter.<br>
+</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">wfr:FA:c3<span style="font-style: italic;"></span>
+          </td>
+          <td style="text-align: center;">wfr:FA:S</td>
+<td style="text-align: center;">0x23<br>
+          </td>
+          <td style="text-align: left;">Fast acquisition sum, or filtered fast acquisition Y position, or impulse response of Y position cell data stream filter.
+
+          </td>
+        </tr><tr>
+  <td style="text-align: center;">wfr:PL:c0</td>
+  <td style="text-align: center;">wfr:PL:D</td>
+<td style="text-align: center;">0x30</td>
+  <td style="text-align: left;">Magnitude of low frequency pilot tone on ADC channel 0.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">wfr:PL:c1</td>
+  <td style="text-align: center;">wfr:PL:B</td>
+<td style="text-align: center;">0x31</td>
+  <td style="text-align: left;">Magnitude of low frequency pilot tone on ADC channel 1.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">wfr:PL:c2</td>
+  <td style="text-align: center;">wfr:PL:C</td>
+<td style="text-align: center;">0x32</td>
+  <td style="text-align: left;">Magnitude of low frequency pilot tone on ADC channel 2.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">wfr:PL:c3</td>
+  <td style="text-align: center;">wfr:PL:A</td>
+<td style="text-align: center;">0x33</td>
+  <td style="text-align: left;">Magnitude of low frequency pilot tone on ADC channel 3.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">wfr:PH:c0</td>
+  <td style="text-align: center;">wfr:PH:D</td>
+<td style="text-align: center;">0x40<br>
+  </td>
+  <td style="text-align: left;">Magnitude of high frequency pilot tone on ADC channel 0.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">wfr:PH:c1</td>
+  <td style="text-align: center;">wfr:PH:B</td>
+<td style="text-align: center;">0x41<br>
+  </td>
+  <td style="text-align: left;">Magnitude of high frequency pilot tone on ADC channel 1.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">wfr:PH:c2</td>
+  <td style="text-align: center;">wfr:PH:C</td>
+<td style="text-align: center;">0x42<br>
+  </td>
+  <td style="text-align: left;">Magnitude of high frequency pilot tone on ADC channel 2.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">wfr:PH:c3</td>
+  <td style="text-align: center;">wfr:PH:A</td>
+<td style="text-align: center;">0x43<br>
+  </td>
+  <td style="text-align: left;">Magnitude of high frequency pilot tone on ADC channel 3.</td>
+</tr>
+
+      </tbody>
+</table>
+
+<br>
+As noted above, the latter two channels of the fast acquisition waveform
+ recorder can be used to monitor signals other than the fast acquisition
+ skew and sum.&nbsp; See the cell data stream filter description for 
+details.<br>
+Note that the D/B/C/A alaises for the ADC and pilot tone recorders are 
+included merely as a convenience.&nbsp; The actual mapping of channels 
+to the A/B/C/D values used by the <a href="FirmwareNotes.html#PositionCalculation">position calculation block</a> is actually
+ set by the "<a href="file:FirmwareNotes.html#ButtonMapping">ADC for button ABCD</a>" value in the Parameters.csv file.<br>
+<br>
+The wfr:<span style="font-style: italic;">XXX</span>:c<span style="font-style: italic;">n</span> record names are provided to make it easier to produce generic waveform display operator interface panels.<span style="font-style: italic;"></span> <br>
+<h3>Deriving button value waveforms from X/Y/Q/S waveforms</h3>
+<p>For buttons at 45° as described in the <a href="FirmwareNotes.html#ButtonLayout">FPGA firmware notes</a>, the X, Y, Q and S values are computed from the button values as shown below, where <span style="font-style: italic;">S</span> is the sum of the four button signals:<br>
+  <math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>X</mi></mtd></mtr><mtr><mtd><mi>Y</mi></mtd></mtr><mtr><mtd><mi>Q</mi></mtd></mtr><mtr><mtd><mi>S</mi></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>=</mo><mrow><mo>[</mo><mtable columnalign="center center center center" rowspacing="0.5ex"><mtr><mtd><msub><mi>G</mi><mi>X</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mo>-</mo><msub><mi>G</mi><mi>X</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mo>-</mo><msub><mi>G</mi><mi>X</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><msub><mi>G</mi><mi>X</mi></msub><mo>/</mo><mi>S</mi></mtd></mtr><mtr><mtd><msub><mi>G</mi><mi>Y</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><msub><mi>G</mi><mi>Y</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mo>-</mo><msub><mi>G</mi><mi>Y</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mo>-</mo><msub><mi>G</mi><mi>Y</mi></msub><mo>/</mo><mi>S</mi></mtd></mtr><mtr><mtd><msub><mi>G</mi><mi>Q</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mo>-</mo><msub><mi>G</mi><mi>Q</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><msub><mi>G</mi><mi>Q</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mo>-</mo><msub><mi>G</mi><mi>Q</mi></msub><mo>/</mo><mi>S</mi></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>⋅</mo><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>A</mi></mtd></mtr><mtr><mtd><mi>B</mi></mtd></mtr><mtr><mtd><mi>C</mi></mtd></mtr><mtr><mtd><mi>D</mi></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow></mrow><annotation encoding="TeX">\left[ \begin{array}{c}
+X \\ Y \\ Q \\ S \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+G_X/S &amp; -G_X/S &amp; -G_X/S &amp;  G_X/S \\
+G_Y/S &amp;  G_Y/S &amp; -G_Y/S &amp; -G_Y/S \\
+G_Q/S &amp; -G_Q/S &amp;  G_Q/S &amp; -G_Q/S \\
+1 &amp; 1 &amp; 1 &amp; 1 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array}\right ]
+</annotation></semantics></math><br>
+The X and Y gain factors are in units of nm per full scale ratio 
+and the Q gain factor is typically units of parts per ten million per full scale 
+ratio.&nbsp; Typical values for the X and Y gain factors are around 16,000,000.&nbsp; The Q gain factor is usually 10,000,000.</p><p><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>A</mi></mtd></mtr><mtr><mtd><mi>B</mi></mtd></mtr><mtr><mtd><mi>C</mi></mtd></mtr><mtr><mtd><mi>D</mi></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>=</mo><mrow><mo>[</mo><mtable columnalign="center center center center" rowspacing="0.5ex"><mtr><mtd><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>X</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>Y</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>Q</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mn>1</mn><mo>/</mo><mn>4</mn></mtd></mtr><mtr><mtd><mo>-</mo><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>X</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>Y</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mo>-</mo><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>Q</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mn>1</mn><mo>/</mo><mn>4</mn></mtd></mtr><mtr><mtd><mo>-</mo><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>X</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mo>-</mo><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>Y</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>Q</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mn>1</mn><mo>/</mo><mn>4</mn></mtd></mtr><mtr><mtd><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>X</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mo>-</mo><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>Y</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mo>-</mo><mi>S</mi><mo>/</mo><mo stretchy="false">(</mo><mn>4</mn><msub><mi>G</mi><mi>Q</mi></msub><mo stretchy="false">)</mo></mtd><mtd><mn>1</mn><mo>/</mo><mn>4</mn></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>⋅</mo><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>X</mi></mtd></mtr><mtr><mtd><mi>Y</mi></mtd></mtr><mtr><mtd><mi>Q</mi></mtd></mtr><mtr><mtd><mi>S</mi></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow></mrow><annotation encoding="TeX">\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+ S/(4G_X) &amp;  S/(4G_Y) &amp;  S/(4G_Q) &amp;  1/4 \\
+-S/(4G_X) &amp;  S/(4G_Y) &amp; -S/(4G_Q) &amp;  1/4 \\
+-S/(4G_X) &amp; -S/(4G_Y) &amp;  S/(4G_Q) &amp;  1/4 \\
+ S/(4G_X) &amp; -S/(4G_Y) &amp; -S/(4G_Q) &amp;  1/4 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ S \\
+\end{array}\right ]
+</annotation></semantics></math><br>
+</p>
+<p>which can be rewritten as:<br>
+</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo><br>
+[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>A</mi></mtd></mtr><mtr><mtd><mi>B</mi></mtd></mtr><mtr><mtd><mi>C</mi></mtd></mtr><mtr><mtd><mi>D</mi></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>=</mo><mrow><mo>[</mo><mtable columnalign="center center center center" rowspacing="0.5ex"><mtr><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>X</mi></msub></mtd><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Y</mi></msub></mtd><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Q</mi></msub></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>X</mi></msub></mtd><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Y</mi></msub></mtd><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Q</mi></msub></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>X</mi></msub></mtd><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Y</mi></msub></mtd><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Q</mi></msub></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>X</mi></msub></mtd><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Y</mi></msub></mtd><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Q</mi></msub></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>⋅</mo><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>X</mi></mtd></mtr><mtr><mtd><mi>Y</mi></mtd></mtr><mtr><mtd><mi>Q</mi></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>⋅</mo><mo stretchy="false">(</mo><mi>S</mi><mo>/</mo><mn>4</mn><mo stretchy="false">)</mo></mrow><annotation encoding="TeX">\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+ 1/G_X &amp;  1/G_Y &amp;  1/G_Q &amp;  1 \\
+-1/G_X &amp;  1/G_Y &amp; -1/G_Q &amp;  1 \\
+-1/G_X &amp; -1/G_Y &amp;  1/G_Q &amp;  1 \\
+ 1/G_X &amp; -1/G_Y &amp; -1/G_Q &amp;  1 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ 1 \\
+\end{array}\right ] \cdot (S/4)
+</annotation></semantics></math><br>
+</p>
+<p><br>
+The corresponding expressions for buttons at 0° are:</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>X</mi></mtd></mtr><mtr><mtd><mi>Y</mi></mtd></mtr><mtr><mtd><mi>Q</mi></mtd></mtr><mtr><mtd><mi>S</mi></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>=</mo><mrow><mo>[</mo><mtable columnalign="center center center center" rowspacing="0.5ex"><mtr><mtd><mn>0</mn></mtd><mtd><mo>-</mo><mn>2</mn><msub><mi>G</mi><mi>X</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mn>0</mn></mtd><mtd><mn>2</mn><msub><mi>G</mi><mi>X</mi></msub><mo>/</mo><mi>S</mi></mtd></mtr><mtr><mtd><mn>2</mn><msub><mi>G</mi><mi>Y</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mn>0</mn></mtd><mtd><mo>-</mo><mn>2</mn><msub><mi>G</mi><mi>Y</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><msub><mi>G</mi><mi>Q</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mo>-</mo><msub><mi>G</mi><mi>Q</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><msub><mi>G</mi><mi>Q</mi></msub><mo>/</mo><mi>S</mi></mtd><mtd><mo>-</mo><msub><mi>G</mi><mi>Q</mi></msub><mo>/</mo><mi>S</mi></mtd></mtr><mtr><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>⋅</mo><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>A</mi></mtd></mtr><mtr><mtd><mi>B</mi></mtd></mtr><mtr><mtd><mi>C</mi></mtd></mtr><mtr><mtd><mi>D</mi></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow></mrow><annotation encoding="TeX">\left[ \begin{array}{c}
+X \\ Y \\ Q \\ S \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+    0 &amp; -2G_X/S &amp;    0    &amp; 2G_X/S \\
+2G_Y/S &amp;      0 &amp; -2G_Y/S &amp;      0 \\
+G_Q/S &amp; -G_Q/S &amp;  G_Q/S &amp; -G_Q/S \\
+1 &amp; 1 &amp; 1 &amp; 1 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array}\right ]&nbsp;</annotation></semantics></math></p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>A</mi></mtd></mtr><mtr><mtd><mi>B</mi></mtd></mtr><mtr><mtd><mi>C</mi></mtd></mtr><mtr><mtd><mi>D</mi></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>=</mo><mrow><mo>[</mo><mtable columnalign="center center center center" rowspacing="0.5ex"><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Y</mi></msub></mtd><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Q</mi></msub></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>X</mi></msub></mtd><mtd><mn>0</mn></mtd><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Q</mi></msub></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Y</mi></msub></mtd><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Q</mi></msub></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>X</mi></msub></mtd><mtd><mn>0</mn></mtd><mtd><mo>-</mo><mn>1</mn><mo>/</mo><msub><mi>G</mi><mi>Q</mi></msub></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>⋅</mo><mrow><mo>[</mo><mtable columnalign="center" rowspacing="0.5ex"><mtr><mtd><mi>X</mi></mtd></mtr><mtr><mtd><mi>Y</mi></mtd></mtr><mtr><mtd><mi>Q</mi></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr><mtr><mtd></mtd></mtr></mtable><mo>]</mo></mrow><mo>⋅</mo><mo stretchy="false">(</mo><mi>S</mi><mo>/</mo><mn>4</mn><mo stretchy="false">)</mo></mrow><annotation encoding="TeX">\left[ \begin{array}{c}
+A \\ B \\ C \\ D \\
+\end{array} \right ] = \left [ \begin{array}{cccc}
+     0 &amp;  1/G_Y &amp;  1/G_Q &amp;  1 \\
+-1/G_X &amp;      0 &amp; -1/G_Q &amp;  1 \\
+     0 &amp; -1/G_Y &amp;  1/G_Q &amp;  1 \\
+ 1/G_X &amp;      0 &amp; -1/G_Q &amp;  1 \\
+\end{array}
+\right ]
+\cdot
+\left[ \begin{array}{c}
+X \\ Y \\ Q \\ 1 \\
+\end{array}\right ] \cdot (S/4)
+</annotation></semantics></math><br>
+</p>
+<p><br>
+</p>
+<h2>Miscellaneous Records</h2>
+
+
+
+
+DTYP=asynInt32 and INP/OUT="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to the port name in the bpmConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as described in the following table.
+
+
+
+
+<table style=" text-align: left; width: 80%; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+<tbody><tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th><td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+    </span><span style="font-weight: bold;">Type</span><br>
+  </td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr>
+<tr><td style="text-align: center;">debugFlags_<br>
+          </td><td style="text-align: center;">0x001<br>
+          </td><td style="text-align: center;">longout<br>
+  </td>
+<td style="text-align: left;">Client access to diagnostic mode 
+flags.&nbsp; Use with caution since enabling diagnostic messages can 
+wreak havoc with real-time response.<br>
+</td></tr></tbody>
+</table>
+<p><br>
+</p>
+
+<h1>Using BPM support in an application</h1>
+
+
+    
+<p>Several files need minor modifications to use BPM support in an
+      application.</p>
+
+    
+<ol>
+<li>Add the full path to the BPM support directory to the
+        application <tt>configure/RELEASE</tt> file:<br>
+        <tt>BPM=</tt><em>xxxx</em><tt>/modules/instrument/BPM/</tt><tt>&lt;release&gt;/</tt><tt>IOC/</tt><br>
+        Where <tt>&lt;release&gt;</tt> is the release number of of the
+        BPM support. You'll need to provide a similar line for the ASYN
+        support module.</li><li>Add instrument support to application database definition file<br>
+        The application database definition file must include the
+        database definition files for the BPM. There are two ways that
+        this can be done:
+        <ul><li>If you are building your application database definition
+            file the old-fashioned way from an <em>xxx</em><tt>Include.dbd</tt>
+            file you include the additional database definitions in that
+            file:<br>
+            <tt>include "base.dbd"</tt><br>
+            <tt>include "bpmSup.dbd"</tt><br>
+          </li><li>If you are building your application database definition
+            file from the application Makefile you specify the
+            additional database definitions there:<br>
+            <em>xxx</em><tt>_DBD += base.dbd</tt><br>
+            <em>xxx</em><tt>_DBD += bpmSup.dbd</tt><br>
+          </li></ul>
+      </li><li>Add the bpmSup support libraries to the application<br>
+        You must link the bpmSup support library and the ASYN support
+        library with the application. Add the following lines to the
+        application Makefile: <br>
+        <em>xxx</em><tt>_LIBS += bpmSup</tt><br>
+        <em>xxx</em><tt>_LIBS += asyn</tt><br>
+        before the <br>
+        <em>xxx</em><tt>_LIBS += $(EPICS_BASE_IOC_LIBS)</tt></li><li><a name="bpmConfigure"></a>Add one <tt>bpmConfigure</tt> command for each BPM
+        module, with arguments:<br>
+        
+<ol>
+<li>The ASYN port name.</li><li>The IPv4 address of the BPM module.</li>
+
+
+<li>The index into the fast-orbit feedback X and Y position vectors at 
+which data from this BPM will be placed.&nbsp; A value less than 0 or 
+greater than 511 will inhibit transmission of this BPM’s values to the 
+cell controller.&nbsp; The least significant five bits (equivalent to the remainder of the value divided by 32) of index values 
+of BPMs attached in a fiber loop to a particular cell controller and 
+which send their data to the cell controller (i.e. those with index 
+values in the range [0..511]) must be unique.<br>
+</li>
+<li>The capacity of the ADC waveform recorder (samples per 
+channel).&nbsp; A missing or non-positive value is taken to be 
+77000.&nbsp; Maximum value is 2<sup>24</sup>−3080 (16774136).<br>
+</li><li>The capacity of the turn-by-turn waveform recorder (samples per 
+channel).&nbsp; A missing or non-positive value is taken to be 10000.&nbsp; Maximum value is 2<sup>22</sup> (4194304).</li><li>The capacity of the fast acquisition waveform recorder (samples per 
+channel).&nbsp; A missing or non-positive value is taken to be 1000.&nbsp; Maximum value is 2<sup>22</sup> (4194304).</li>
+<li>The capacity of the pilot tone waveform recorders (samples per 
+channel).&nbsp; A missing or non-positive value is taken to be 1000.&nbsp; Maximum value is 2<sup>20</sup> (1048576).</li>
+
+<li>The priority at which the port threads will run.&nbsp; A
+            missing value or a value of 0 confirms the default medium priority.<br>
+  <br>
+</li>
+</ol>
+
+        Each bpmConfigure command results in the creation of four
+        threads:</li><ol><li>The worker thread for the BPM ASYN port.</li><li>A thread which subscribes to and reads back the BPM published
+          data (slow acquisition, system monitors, waveforms).<br>
+</li><li>An ASYN worker thread for the command/reply UDP port.</li><li>An ASYN worker thread for the readback UDP port.<br>
+          These latter two threads are used only for connect and
+          disconnect operations.&nbsp;&nbsp;&nbsp; Read and write
+          operations take place in the context of the other two threads
+          mentioned above.&nbsp; This eliminates the context switches
+          that would otherwise be required for each read or write
+          operation.<br>
+</li></ol><li>
+        
+        Load a database file or files describing the records associated
+        with each BPM. The example application distributed with this
+        support module illustrates how this is done.&nbsp; If the 
+corresponding bpmConfigure command specified waveform recorder 
+capacities other than the defaults the ADC_NELM, TBT_NELM and FA_NELM 
+macros should be used to provide matching values to the waveform records.</li>
+</ol>
+<br>
+<h2>Console Diagnostic Messages</h2>
+
+    
+<p>The BPM sends startup and diagnostic messages to its front panel 
+console serial port.&nbsp; The serial port settings are      
+115200-8N1.&nbsp; UDP network access to the console is also provided.&nbsp; The cell controller <meta http-equiv="content-type" content="text/html; charset=UTF-8">‘ccConsole.py’
+ script can be used to interact with this network console serial 
+port.&nbsp;&nbsp;   For convenience a copy of this script is in the IOC ‘scripts’ directory with name bpmConsole.py. <br>
+<br>
+</p>
+<h2>
+
+
+
+
+Scripts</h2>
+<p>The ‘scripts’ directory in the IOC support module directory contains useful diagnostic scripts.&nbsp; Among these are:<br>
+</p>
+<h3><a name="bpmConsole"></a>bpmConsole.py</h3>
+
+<p>Provides remote access to BPM console.&nbsp; As mentioned above, this
+ script is actually present in the IOC ‘scripts’ directory rather than 
+in the support module ‘scripts’ directory.
+</p><h3>saRMS.py</h3>
+
+Acquire BPM X and Y 'slow acquisiton' (~10 Hz sampling) position data and display values of RMS beam motion.<br>
+<h3>showLog.py</h3>
+
+
+Uncompress, unpack and display slow acquisition log files.<br>
+
+<p><br>
+</p>
+<p>
+</p>
+
+<p></p>
+
+
+
+
+</body></html>

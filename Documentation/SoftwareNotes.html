@@ -1,0 +1,695 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>SoftwareNotes</title></head><body>
+<h1>Introduction</h1>
+The MicroBlaze software runs in a single-threaded environment with no 
+Xilkernel and uses the LWIP RAW network API.&nbsp; On startup some 
+initializations are performed then the system enters a polling loop 
+checking for work as follows.<br>
+<ul>
+  <li>Are there incoming packets from the network in need of processing?</li>
+  <li>Has the request to read back values from the SFP modules completed?</li>
+  <li>Are the turn-by-turn, fast acquisiton, and slow acquisition timing markers still in sync with the heartbeat event?</li>
+  <li>Is it time to publish slow acquisition (10 Hz) or system monitor (0.5 Hz) data to the IOC?<br>
+  </li>
+  <li>Is there input from the console serial line?<br>
+  </li>
+</ul>
+<p>The incoming network packet processing routine calls back to the application code upon reception of the following packets.<br>
+</p>
+<ul>
+  <li>A command from the IOC.&nbsp; Among these are:</li>
+  <ul>
+    <li>Requests to change the settings of the programmable attenuators on the AFE.</li>
+    <li>Waveform recorder controls.</li>
+    <li>Requests to change the settings of the <a href="EPICSnotes.html#AutoTrim">auto trim</a> state machine.</li>
+    <li>Request to change event receiver trigger mapping or delays.<br>
+    </li>
+  </ul>
+</ul>
+<ul>
+  <li>A <a href="#TFTPserver">TFTP</a> control, data or acknowledgment packet.</li>
+  <li>An acknowledgement that waveform data have been received</li>
+</ul>
+<p><br>
+</p>
+<h1><a name="TFTPserver"></a>TFTP Server</h1>
+
+<p>The FPGA firmware, MicroBlaze executable image, system parameter, 
+attenuation gain compensation factors and local oscillator sine/cosine 
+coefficient tables are stored in flash memory.&nbsp;
+ The BPM provides a TFTP server for uploading or downloading these as 
+six&nbsp; individual files, namely:<span style="font-family: monospace;"><br>
+  </span></p>
+<table style=" text-align: left; width: 100%;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td style="text-align: center;">BPM.bin<br>
+      </td>
+      <td style="text-align: left;">FPGA Firmware.&nbsp;&nbsp; Follow procedure <a href="BPM_Impact.html">here</a> to produce this file which also contains the SREC bootstrap loader.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center; vertical-align: middle;">BPM_APP.srec<br>
+      </td>
+      <td style="vertical-align: top;">MicroBlaze application executable image.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;"><a name="SystemParameters"></a>Parameters.csv<br>
+      </td>
+      <td style="text-align: left;">System parameters.&nbsp; Comma-separated value format.&nbsp; Uploaded values take effect on the next FPGA reboot.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">Attenuation.csv<br>
+      </td>
+      <td style="text-align: left;">Attenuation gain compensation 
+factors.&nbsp; Comma-separated value format.&nbsp; 32 rows, four 
+columns.&nbsp; Typically at least one column in each row will have the value 1.&nbsp; Uploaded values take effect immediately.<br>
+      </td>
+    </tr><tr>
+  <td style="text-align: center;"><a name="rfTable"></a>rfTable.csv<br>
+  </td>
+  <td style="text-align: left;">Two columns of comma-separated numbers 
+between -1.0 and +1.0 specifying the cosine and sine terms of the 
+preliminary processing RF local oscillator.&nbsp; The number of rows 
+sets the number of samples per turn for circular machine BPMs and the 
+maximum number of samples per acquisition for single-pass BPMs.&nbsp; The 
+minimum number of rows is 31, the maximum 2048.&nbsp; Uploaded values 
+take effect on the next FPGA reboot.&nbsp; The values are internally 
+scaled and quantized to 18-bit integers so reading back the table may 
+not return exactly the values that were written.<br>
+</td>
+</tr>
+<tr>
+  <td style="text-align: center;"><a name="ptTable"></a>ptTable.csv<br>
+  </td>
+  <td style="text-align: left;">Four columns of comma-separated numbers 
+between -1.0 and +1.0 specifying the cosine and sine terms of the 
+preliminary processing&nbsp;‘pilot tone low’ (columns 1 and 2) and 
+‘pilot tone high’ (columns 3 and 4) local oscillators.&nbsp; The number of rows 
+sets the number of samples per computation for both frequency-multiplexed and time-multiplexed pilot tones.&nbsp; The 
+minimum number of rows is 31, the maximum 2048.&nbsp; Uploaded values take effect on the next 
+FPGA reboot.&nbsp; The values are internally scaled and quantized to 
+18-bit integers so reading back the table may not return exactly the 
+values that were written.</td>
+</tr>
+
+  </tbody>
+</table>
+<p>The files must be transferred in 'binary' mode.&nbsp; The file name 
+comparison in the BPM ignores case and any characters after the initial 
+part of the name.&nbsp; For example, <span style="font-weight: bold;"><span style="font-family: monospace;">Parameters‑BPM123‑2014‑09‑21.csv</span></span>
+will refer to the same contents as <span style="font-weight: bold;"><span style="font-family: monospace;">Parame</span></span><span style="font-weight: bold;"><span style="font-family: monospace;">ters.cs</span></span><span style="font-weight: bold;"><span style="font-family: monospace;">v</span></span><span style="font-family: monospace;"></span>.&nbsp;
+ The TFTP server is limited to a single active transfer at a time.&nbsp;
+ Don't attempt simultaneous transfers from multiple clients.</p>
+
+<p>A python script to generate the local oscillator tables is included in the BPM application source directory.<br>
+</p>
+
+
+<table style=" width: 500px; height: 503px; text-align: left; margin-left: auto; margin-right: auto;" cellspacing="2" cellpadding="2" border="1">
+
+<tbody><tr>
+    <td colspan="2" rowspan="1" style=" text-align: center; vertical-align: middle;"><big><big><span style="font-weight: bold;">Example Parameters.csv</span></big></big><br>
+    </td>
+  </tr>
+<tr><td style="text-align: left;">Ethernet Address</td><td style="text-align: left;">00:19:24:00:06:36</td></tr>
+<tr><td style="text-align: left;">IP Address</td><td style="text-align: left;">192.168.23.16</td></tr>
+<tr><td style="text-align: left;">IP Netmask</td><td style="text-align: left;">255.255.255.0</td></tr>
+<tr><td style="text-align: left;">IP Gateway</td><td style="text-align: left;">192.168.23.1</td></tr>
+
+<tr><td style="text-align: left;">PLL RF divisor</td><td style="text-align: left;">328</td></tr>
+<tr><td style="text-align: left;">PLL multiplier</td><td style="text-align: left;">77</td></tr>
+<tr><td style="text-align: left;">Single pass?<br>
+</td><td style="text-align: left;">0</td></tr>
+<tr><td style="text-align: left;"><a name="SinglePassEvent"></a>Single pass event<br>
+</td><td style="text-align: left;">0</td></tr>
+
+<tr>
+  <td style="text-align: left;"><a name="RFautotrimEvent"></a>RF auto-trim event<br>
+  </td>
+  <td style="text-align: left;">0<br>
+  </td>
+</tr>
+<tr><td style="text-align: left;">EVR clocks per fast acquisition</td><td style="text-align: left;">12464</td></tr>
+<tr><td style="text-align: left;">EVR clocks per slow acquisition</td><td style="text-align: left;">12464000</td></tr>
+<tr><td style="text-align: left;"><a name="ButtonMapping"></a>ADC for button ABCD</td><td style="text-align: left;">3120</td></tr>
+<tr><td style="text-align: left;">X calibration (mm p.u.)</td><td style="text-align: left;">16</td></tr>
+<tr><td style="text-align: left;">Y calibration (mm p.u.)</td><td style="text-align: left;">16</td></tr>
+<tr><td style="text-align: left;">Q calibration (p.u.)</td><td style="text-align: left;">16</td></tr>
+<tr><td style="text-align: left;">Button rotation (0 or 45)</td><td style="text-align: left;">45</td></tr><tr>
+  <td style="text-align: left;">AFE attenuator trims (dB)<br>
+  </td>
+  <td style="text-align: left;">0 0 0 0</td>
+</tr>
+
+</tbody>
+</table>
+
+<p><a name="ExternalClockMode"></a>The PLL divisor and multiplier 
+parameters set the frequency of the AFE ADC clocks.&nbsp; A PLL 
+multiplier value less than two sets the AD9510 chip into pass-through mode (AFE external clock provides ADC clocks).<br>
+</p><h1>Console Commands</h1>
+
+
+<p>The BPM sends startup and diagnostic messages to its front-panel 
+console serial port.&nbsp; The serial port is run at
+      115200-8N1.&nbsp; <a href="EPICSnotes.html#bpmConsole"> UDP network access</a> to the console is also 
+provided.&nbsp;
+Commands are entered using a simple command line interpreter.&nbsp;
+There is no command history and the only editing available is the 
+backspace or delete key which erases the character currently at the end 
+of the line.&nbsp; A carriage-return or line-feed character marks the 
+end of a line.&nbsp; Only enough of a command to make it unique is 
+required.&nbsp; Since no existing commands share a common leading letter 
+this means that only the first character of a command is needed.&nbsp;
+ The commands are:<br>
+</p>
+<dl>
+  <dt><span style="font-weight: bold;">boot</span></dt>
+  <dd>The BPM prompts for confirmation and then restarts as if powered up</dd>
+  <dt><br>
+    <span style="font-weight: bold;">debug [<span style="font-style: italic;">n</span>]</span></dt>
+  <dd>The debugging flags are set to the specified value, if one is given.&nbsp; The bits are</dd>
+</dl>
+<ul style="margin-left: 40px;">
+
+  <li>Bit 1 &nbsp; — Enable messages related to the high speed cell communication links.<br>
+</li>
+  <li>Bit 2&nbsp;&nbsp; — Enable messages related to the subscribe/publish UDP port.</li>
+
+  <li>Bit 3&nbsp;&nbsp; — Enable messages related to the server UDP port.</li>
+  <li>Bit 6 &nbsp; — Enable messages related to auto trim operation.</li>
+  <li>Bit 7&nbsp;&nbsp; — Enable messages related to TFTP transfers.</li>
+
+  <li>Bit 8&nbsp;&nbsp; — Enable messages related to&nbsp; waveform recorder header transmission.</li>
+  <li>Bit 10 — Enable messages related to&nbsp; waveform recorder data transmission.</li>
+  <li>Bit 11 — Place waveform recorder firmware in diagnostic 
+mode.&nbsp; This changes the data stored by the waveform 
+recorders.&nbsp; Clients will receive unusual-looking data.</li>
+<li><a name="CellFilterDiagnosticBits"></a>Bit 12 — Select the alternate
+ set of channels for the fast acquisition waveform recorder.&nbsp; 
+Channel 2, normally Q, becomes the output of the cell data stream X 
+filter.&nbsp;  Channel 3, normally S, becomes the output of the cell 
+data stream Y filter.</li>
+<li>Bit 13 — Drive the input of the cell data stream filters with a unit
+ impulse rather than with the fast acquisition X and Y data 
+streams.&nbsp; When used in conjunction with the preceding diagnostic 
+bit this allows the most significant 32 bits of the filter tap 
+coefficients to be read as the fast acquisition channel 2 and 3 values.<br>
+</li>
+
+</ul>
+
+<dl>
+  </dl>
+<dl>
+<dt><span style="font-weight: bold;">evr</span></dt><dd>Show the embedded event receiver settings.</dd>
+</dl>
+<dl>
+</dl>
+<dl>
+<dt><span style="font-weight: bold;">gen [off|on]<br>
+</span></dt><dd>Generate simulated button signals following the time-multiplexed <a href="EPICSnotes.html#AutoTrim">auto-trim</a> pilot tone signal.<br>
+</dd>
+</dl>
+<dl>
+<dt><span style="font-weight: bold;">log</span></dt>
+  <dd>Replay console startup messages.</dd>
+  <dt><br>
+
+    <span style="font-weight: bold;"><a name="MAC"></a>mac [aa:bb:cc:dd:ee:ff]</span></dt>
+  <dd>Show the Ethernet MAC address if no argument is present otherwise set the MAC address in&nbsp;
+flash memory.&nbsp; The BPM prompts for 
+confirmation before writing to the flash memory.<br>
+
+  </dd>
+  <dt><br>
+
+</dt><dt><span style="font-weight: bold;">net [</span><span style="font-weight: bold;">www.xxx.yyy.zzz[/n]]</span></dt>
+  
+  <dd>Show the network settings if no argument is present otherwise set 
+network parameters in flash memory 
+ based on the argument.&nbsp; The network address is set to the 
+specified 
+value.&nbsp; The netmask is set based on the optional network address 
+length (/n).&nbsp; If the network address length is omitted a value of 
+24 (Class C 
+network) is used.&nbsp; The BPM prompts for confirmation before writing 
+to 
+the flash memory.</dd>
+  
+</dl>
+
+<dl>
+  <dt><span style="font-weight: bold;">reg r [n]</span></dt>
+
+  <dd><span style="font-weight: bold;"></span>Show the contents of <span style="font-weight: bold;">n</span> (default 1) general-purpose I/O registers starting at register <span style="font-weight: bold;">r</span>.</dd>
+  <dt><br>
+    <span style="font-weight: bold;">stats</span></dt>
+  <dd>Show the network statistics.</dd><dt><br>
+</dt>
+<dt><span style="font-weight: bold;">tlog</span></dt>
+<dd>Log arrival of timing system events until an EVR time-of-day error 
+occurs or a character is typed at the console.&nbsp; Then dump a table 
+of events and their arrival times.</dd>
+
+</dl>
+
+<dl>
+  <dt><br>
+</dt>
+</dl>
+<h1>Registers</h1><h2><span style="font-weight: bold;"></span><span style="font-weight: bold;">Waveform Recorders</span></h2>
+<p>Register number is base value plus offset shown in
+ table.<br>
+</p>
+<table style=" text-align: left; width: 80%;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td style="text-align: center;">Offset<br>
+      </td>
+      <td style="text-align: center;">Bit<br>
+      </td>
+      <td style="text-align: center;">Direction<br>
+      </td>
+      <td style="text-align: center;">Description<br>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="1" rowspan="9" style="text-align: center;">0<br>
+      </td>
+      <td colspan="1" rowspan="2" style="text-align: center;">0<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">Recorder is armed. Cleared by writing 0 to this bit or on last AXI write of acquisition.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">W<br>
+      </td>
+      <td style="text-align: left;">Arm/disarm (1/0) recorder.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">3–1<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">State of AXI master.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">4<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">FIFO overrun.&nbsp; Cleared only by resetting FPGA.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">6–5<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">AXI master BRESP status.&nbsp; A non-zero value indicates serious problems with the AXI crosspoint switch logic!<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">7<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">Recorder acquisition has completed and waveform buffers are full.&nbsp; Cleared on any write to this register.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">8<br>
+      </td>
+      <td style="text-align: center;">R/W<br>
+      </td>
+      <td style="text-align: left;">Place recorder into diagnostic mode when set.&nbsp; Useful for confirming proper operation of AXI master.<br>
+      </td>
+    </tr>
+    <tr>
+  <td style="text-align: center;">9<br>
+  </td>
+  <td style="text-align: center;">R/W<br>
+  </td>
+  <td style="text-align: left; vertical-align: middle;">Record test data when set.&nbsp; Applies only to ADC recorder.<br>
+  </td>
+</tr>
+<tr>
+      <td style="text-align: center;">31–24<br>
+      </td>
+      <td style="text-align: center;">R/W<br>
+      </td>
+      <td style="text-align: left;">Trigger enable bit mask.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">1<br>
+      </td>
+      <td style="text-align: center;">–<br>
+      </td>
+      <td style="text-align: center;">R/W<br>
+      </td>
+      <td style="text-align: left;">Pretrigger acquisition count.&nbsp; 
+ADC recorder always acquires 3080 pretrigger samples and selection of 
+the actual number of pretrigger samples sent to the IOC is performed in 
+software. <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">2<br>
+      </td>
+      <td style="text-align: center;">–<br>
+      </td>
+      <td style="text-align: center;">R/W<br>
+      </td>
+      <td style="text-align: left;">Acquisition sample count.&nbsp; ADC recorder always acquires full waveform buffer and sample selection is performed in software.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">3<br>
+      </td>
+      <td style="text-align: center;">–<br>
+      </td>
+      <td style="text-align: center;">R/W<br>
+      </td>
+      <td style="text-align: left;">Acquisition memory 
+pointer.&nbsp;&nbsp; The most-significant eight bits are R/W.&nbsp; The 
+remaining bits are controlled by the AXI master state machine.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">4<br>
+      </td>
+      <td style="text-align: center;">–<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">Event receiver time stamp seconds of first post-trigger sample.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">5<br>
+      </td>
+      <td style="text-align: center;">–<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">Event receiver time stamp ticks of first post-trigger sample.</td>
+    </tr>
+  </tbody>
+</table>
+<p><br>
+</p>
+<h2><span style="font-weight: bold;"></span></h2>
+<span style="font-weight: bold;"><br>
+</span>
+<table style=" text-align: left; width: 80%;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td colspan="3" rowspan="1" style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Register 100 – AFE PLL</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">Bit<br>
+      </td>
+      <td style="text-align: center;">Dir<br>
+      </td>
+      <td style="text-align: center;">Description<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">23–0<br>
+      </td>
+      <td style="text-align: center;">W<br>
+      </td>
+      <td style="text-align: left;">24 bit value to send to the AD9510 SPI port (16-bit command, 8-bit data).<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">7–0<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">Value read from previous SPI transaction.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">14<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style=" text-align: left;">Set when AFE PLL is not locked to the reference clock.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">15<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">Set when the FPGA SPI port is active.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">19–16<br>
+      </td>
+      <td style="text-align: center;">R<br>
+      </td>
+      <td style="text-align: left;">The state of the clock lines from the four ADC chips (bit 19 is ADC 3, bit 16 is ADC 0).<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-weight: bold;"><br>
+  <br>
+</span>
+<table style=" text-align: left; width: 80%;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td colspan="2" rowspan="1" style="text-align: center;"><span style="font-weight: bold;">Register 1</span><span style="font-weight: bold;">01 – AFE Refere</span><span style="font-weight: bold;">nce Clock Ge</span><span style="font-weight: bold;">nerat</span>or<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">Bit<br>
+      </td>
+      <td style="text-align: center;">Description<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">7–0<br>
+      </td>
+      <td style="vertical-align: top; text-align: left;">Counter reload 
+value.&nbsp; Value is one less than the number of event receiver clock 
+cycles that the AFE reference clock will be low (R/W).<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">15–8<br>
+      </td>
+      <td style="vertical-align: top; text-align: left;">Counter reload 
+value.&nbsp; Value is one less than the number of event receiver clock 
+cycles that the AFE reference clock will be high (R/W).<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">16<br>
+      </td>
+      <td style="vertical-align: top; text-align: left;">AFE reference clock counter is synchronized to event receiver trigger output 0 (heartbeat).<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">17<br>
+      </td>
+      <td style="vertical-align: top; text-align: left;">Value of AFE 
+reference clock output at rising edge of heartbeat trigger.&nbsp; Zero 
+when reference clock counter is synchronized to event receiver trigger.</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">31–24</td>
+      <td style="vertical-align: top; text-align: left;">Value of 
+counter at rising edge of heartbeat trigger.&nbsp; Zero when reference 
+clock counter is synchronized to event receiver trigger.</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+
+<table style=" text-align: left; width: 80%;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td colspan="2" rowspan="1" style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Register 102</span><span style="font-weight: bold;"> – Clock Status<br>
+        </span></td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">Bit<br>
+      </td>
+      <td style="text-align: center;">Description<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">0</td>
+      <td style="text-align: left;">Local Oscillator Synchronized<br>
+
+
+Set when local oscillator used for preliminary processing synchronous demodulation is synchronized to the heartbeat event.<br>
+Always true for single-pass operation.<br>
+</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">1<br>
+      </td>
+      <td style="text-align: left;">EVR Loss Of Lock<br>
+Set when event receiver is not locked to incoming event stream.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">2<br>
+      </td>
+      <td style="text-align: left;">AFE Reference Clock Synchronized<br>
+Set when the reference clock generated in the FPGA and sent to the AFE PLL is synchronized to the heartbeat event.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">5<br>
+      </td>
+      <td style="text-align: left;">EVR Fast Acquisition Marker Synchronized<br>
+Set when the fast acquisition marker is synchronized to the heartbeat event.</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">6<br>
+      </td>
+      <td style="text-align: left;">EVR Slow Acquisition Marker Synchronized<br>
+
+Set when the slow acquisition marker is synchronized to the heartbeat event.</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">7<br>
+      </td>
+      <td style="text-align: left;">AFE PLL Unlocked<br>
+Set when the AFE PLL is not locked to the reference clock from the FPGA.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center; vertical-align: middle;">12–8<br>
+      </td>
+      <td style="text-align: left; vertical-align: middle;">AFE ADC clock delay tap<br>
+ADC clock input pin IODELAYE1 FPGA element tap setting. (R/W)<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center; vertical-align: middle;">15<br>
+      </td>
+      <td style="text-align: left; vertical-align: middle;">AFE ADC clock delay controller reset. (W)<br>
+AFE ADC clock delay controller locked. (R)<br>
+      </td>
+    </tr>
+  </tbody>
+</table><br>
+<br>
+<table style=" width: 400px;" cellspacing="2" cellpadding="2" border="1">
+  <caption><br>
+  </caption>
+<tbody><tr>
+    <td style="vertical-align: middle; text-align: center;" rowspan="1" colspan="2"><span style="font-weight: bold;">All Registers</span><br>
+    </td>
+  </tr>
+<tr><td style="text-align: center;"><span style="font-weight: bold;">Register</span></td><td style="text-align: center;"><span style="font-weight: bold;">Description</span></td></tr>
+<tr><td style="text-align: center;">4</td><td style="text-align: left;">Local oscillator tables</td></tr>
+<tr><td style="text-align: center;">5</td><td style="text-align: left;">Accumulator scaling values</td></tr>
+<tr><td style="text-align: center;">6</td><td style="text-align: left;">Peak value of channel 1 and 0</td></tr>
+<tr><td style="text-align: center;">7</td><td style="text-align: left;">Peak value of channel 3 and 2</td></tr>
+<tr><td style="text-align: center;">8</td><td style="text-align: left;">Self-triggering (and ADC clip status)</td></tr>
+<tr><td style="text-align: center;">10</td><td style="text-align: left;">Fast acquisition divider reload</td></tr>
+<tr><td style="text-align: center;">11</td><td style="text-align: left;">Slow acquisition divider reload</td></tr>
+<tr><td style="text-align: center;">12</td><td style="text-align: left;">Count CRC faults on CCW link</td></tr>
+<tr><td style="text-align: center;">13</td><td style="text-align: left;">Count CRC faults on CW link</td></tr>
+<tr><td style="text-align: center;">14</td><td style="text-align: left;">Auto gain compensation control/status</td></tr>
+<tr><td style="text-align: center;">15</td><td style="text-align: left;">Auto gain compensation tone threshold</td></tr>
+<tr><td style="text-align: center;">16</td><td style="text-align: left;">Gain factor for ADC 0</td></tr>
+<tr><td style="text-align: center;">17</td><td style="text-align: left;">Gain factor for ADC 1</td></tr>
+<tr><td style="text-align: center;">18</td><td style="text-align: left;">Gain factor for ADC 2</td></tr>
+<tr><td style="text-align: center;">19</td><td style="text-align: left;">Gain factor for ADC 3</td></tr>
+<tr><td style="text-align: center;">20</td><td style="text-align: left;">Position calculation control/status</td></tr>
+<tr><td style="text-align: center;">21</td><td style="text-align: left;">X calibration factor</td></tr>
+<tr><td style="text-align: center;">22</td><td style="text-align: left;">Y calibration factor</td></tr>
+<tr><td style="text-align: center;">23</td><td style="text-align: left;">Q calibration factor</td></tr>
+<tr><td style="text-align: center;">24</td><td style="text-align: left;">Slow acquisition X position</td></tr>
+<tr><td style="text-align: center;">25</td><td style="text-align: left;">Slow acquisition Y position</td></tr>
+<tr><td style="text-align: center;">26</td><td style="text-align: left;">Slow acquisition skew</td></tr>
+<tr><td style="text-align: center;">27</td><td style="text-align: left;">Slow acquisition sum</td></tr>
+<tr><td style="text-align: center;">30</td><td style=" text-align: left;">Slow acquisition time stamp</td></tr>
+<tr><td style="text-align: center;">31</td><td style="text-align: left;">Slow acquisition time stamp</td></tr>
+<tr><td style="text-align: center;">32</td><td style="text-align: left;">Cell controller communication CSR</td></tr>
+<tr><td style="text-align: center;">33</td><td style="text-align: left;">Cell data stream filter CSR</td></tr>
+<tr><td style="text-align: center;">34</td><td style="text-align: left;">Cell data stream filters coefficients</td></tr>
+<tr><td style="text-align: center;">35</td><td style="text-align: left;">Loss-of-beam threshold</td></tr>
+<tr><td style="text-align: center;">36</td><td style="text-align: left;">X motion (wideband)</td></tr>
+<tr><td style="text-align: center;">37</td><td style="text-align: left;">Y motion (wideband)</td></tr>
+<tr><td style="text-align: center;">38</td><td style="text-align: left;">X motion (narrowband)</td></tr>
+<tr><td style="text-align: center;">39</td><td style="text-align: left;">Y motion (narrowband)</td></tr>
+<tr><td style="text-align: center;">40</td><td style="text-align: left;">ADC 0 RF (SA) magnitude</td></tr>
+<tr><td style="text-align: center;">41</td><td style="text-align: left;">ADC 1 RF (SA) magnitude</td></tr>
+<tr><td style="text-align: center;">42</td><td style="text-align: left;">ADC 2 RF (SA) magnitude</td></tr>
+<tr><td style="text-align: center;">43</td><td style="text-align: left;">ADC 3 RF (SA) magnitude</td></tr>
+<tr><td style="text-align: center;">44</td><td style="text-align: left;">ADC 0 low freq pilot tone magnitude</td></tr>
+<tr><td style="text-align: center;">45</td><td style="text-align: left;">ADC 1 low freq pilot tone magnitude</td></tr>
+<tr><td style="text-align: center;">46</td><td style="text-align: left;">ADC 2 low freq pilot tone magnitude</td></tr>
+<tr><td style="text-align: center;">47</td><td style="text-align: left;">ADC 3 low freq pilot tone magnitude</td></tr>
+<tr><td style="text-align: center;">48</td><td style="text-align: left;">ADC 0 high freq pilot tone magnitude</td></tr>
+<tr><td style="text-align: center;">49</td><td style="text-align: left;">ADC 1 high freq pilot tone magnitude</td></tr>
+<tr><td style="text-align: center;">50</td><td style="text-align: left;">ADC 2 high freq pilot tone magnitude</td></tr>
+<tr><td style="text-align: center;">51</td><td style="text-align: left;">ADC 3 high freq pilot tone magnitude</td></tr>
+<tr><td style="text-align: center;">52</td><td style="text-align: left;">Event logger CSR (R/W)</td></tr>
+<tr><td style="text-align: center;">53</td><td style="text-align: left;">Event logger tick counter (R)</td></tr>
+<tr><td style="text-align: center;">64</td><td style="text-align: left;">ADC recorder</td></tr>
+<tr><td style="text-align: center;">70</td><td style="text-align: left;">Turn-by-turn recorder</td></tr>
+<tr><td style="text-align: center;">76</td><td style="text-align: left;">Fast acquisition recorder</td></tr>
+<tr><td style="text-align: center;">82</td><td style="text-align: left;">Low pilot tone recorder</td></tr>
+<tr><td style="text-align: center;">88</td><td style="text-align: left;">High pilot tone recorder</td></tr>
+<tr><td style="text-align: center;">94</td><td style="text-align: left;">Software trigger</td></tr>
+<tr><td style="text-align: center;">100</td><td style="text-align: left;">SPI connection to AFE PLL</td></tr>
+<tr><td style="text-align: center;">101</td><td style="text-align: left;">AFE PLL reference clock generator</td></tr>
+<tr><td style="text-align: center;">102</td><td style="text-align: left;">AFE (and other) clock status</td></tr>
+<tr><td style="text-align: center;">103</td><td style="text-align: left;">EVR clock frequency</td></tr>
+<tr><td style="text-align: center;">104</td><td style="text-align: left;">ADC clock frequency</td></tr>
+<tr><td style="text-align: center;">105</td><td style="text-align: left;">DFE temperatures 1 and 0</td></tr>
+<tr><td style="text-align: center;">106</td><td style="text-align: left;">DFE temperatures 3 and 2</td></tr>
+<tr><td style="text-align: center;">107</td><td style="text-align: left;">AFE temperatures 1 and 0</td></tr>
+<tr><td style="text-align: center;">108</td><td style="text-align: left;">AFE temperatures 3 and 2</td></tr>
+<tr><td style="text-align: center;">109</td><td style="text-align: left;">AFE temperatures 5 and 4</td></tr>
+<tr><td style="text-align: center;">110</td><td style="text-align: left;">AFE temperatures 7 and 6</td></tr>
+<tr><td style="text-align: center;">111</td><td style="text-align: left;">AFE power monitor channel 0</td></tr>
+<tr><td style="text-align: center;">112</td><td style="text-align: left;">AFE power monitor channel 1</td></tr>
+<tr><td style="text-align: center;">113</td><td style="text-align: left;">AFE power monitor channel 2</td></tr>
+<tr><td style="text-align: center;">114</td><td style="text-align: left;">DFE fan speed</td></tr>
+<tr><td style="text-align: center;">115</td><td style="text-align: left;">Initiate/monitor SFP readback</td></tr>
+<tr><td style="text-align: center;">116</td><td style="text-align: left;">Readback from SFP slots 5:4</td></tr>
+<tr><td style="text-align: center;">117</td><td style="text-align: left;">Readback from SFP slots 3:2</td></tr>
+<tr><td style="text-align: center;">118</td><td style="text-align: left;">Readback from SFP slots 1:0</td></tr>
+<tr><td style="text-align: center;">119</td><td style="text-align: left;">Set AFE attenuator(s)</td></tr>
+<tr><td style="text-align: center;">120</td><td style="text-align: left;">ADC control lines</td></tr>
+<tr><td style="text-align: center;">121</td><td style="text-align: left;">Count system clocks</td></tr>
+<tr><td style="text-align: center;">122</td><td style="text-align: left;">Count 'seconds' (based on sysclk)</td></tr>
+<tr><td style="text-align: center;">123</td><td style="text-align: left;">Firmware build date</td></tr>
+<tr><td style="text-align: center;">124</td><td style="text-align: left;">ADC data transmission CSR</td></tr>
+<tr><td style="text-align: center;">125</td><td style="text-align: left;">AFE/DFE serial numbers</td></tr>
+</tbody>
+</table>
+<br>
+<p></p>
+<ol>
+
+</ol>
+
+
+
+
+</body></html>

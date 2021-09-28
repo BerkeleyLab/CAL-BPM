@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>HardwareNotes</title></head><body>
+<h1>Front Panel Indicators</h1>
+<h2>Ethernet Connector</h2>
+<p>The LED on the upper right of the Ethernet RJ-45 connector lights 
+yellow when a 1000BaseT connection has been made with the network 
+switch.&nbsp; The LED on the upper left of the connector blinks green to
+ indicate that one or more packets have been received and orange to 
+indicate that one or more packets have been transmitted.&nbsp; If both 
+the receiver and transmitter are active the LED will alternate between 
+green and orange.<br>
+</p>
+<h2>Event Receiver Fiber Connector<br>
+</h2>
+<p>The LED on the upper left of the event link connector lights blue 
+when the event receiver is synchronized with the timing system event 
+generator.&nbsp; The LED on the upper right of the connector blinks 
+green whenever a heartbeat event (event number 122) is received.&nbsp; 
+This should normally occur about once per second.<br>
+</p>
+<h2>Cell Communication Fiber Connectors<br>
+</h2>
+The LED on the upper left of the event link connector lights blue when 
+the Aurora link to the BPM's neighbour enters the 'Channel Up' 
+state.&nbsp; The LED on the upper right of the connector blinks green 
+whenever a packet is received from the BPM's neighbour.&nbsp; In normal 
+operation packets arrive so rapidly that the green indicator will light 
+continuously.&nbsp; Note that the cell controller doesn't transmit any 
+data so the data reception indicator on a BPM link connected to the cell
+ controller should remain off.<br>
+<h2>“AFE PLL FLT” LED</h2>
+<p>Blinks on and off when the event receiver is not synchronized with the timing system event 
+generator.&nbsp; Lights red when the event receiver is synchronized with the timing system event 
+generator but the phase-locked loop clock generator on the analog 
+front end card fails to lock with the reference signal from the event receiver.<br>
+</p>
+<h2>“LNK OK” LED</h2>Blinks off when any of the synchronous demodulator 
+accumulators in the preliminary processing block overflow.&nbsp; This is
+ an indication that the firmware has been built with improper 
+configuration values.&nbsp; The front panel label is a throwback to 
+previous firmware semantics.<br>
+<h2>“NPI ACT”, “NPI TRG” LEDs</h2>
+
+Currently unused.
+<h1>Serial Port Connector</h1>
+<p>The following table shows the RJ45/DE9 (DCE) adapter wiring order for connection to a standard USB/Serial adapter.</p>
+<table style=" text-align: left; width: 300px;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td style="text-align: center;"><span style="font-weight: bold;">RJ45</span><br>
+      </td>
+      <td style="text-align: center;"><span style="font-weight: bold;">Direction</span><br>
+      </td>
+      <td style="text-align: center;"><span style="font-weight: bold;">DE9(S)</span><br>
+      </td>
+      <td style="text-align: center;"><span style="font-weight: bold;">C</span><span style="font-weight: bold;">olor</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">1<br>
+      </td>
+      <td style="text-align: center;">→ DSR<br>
+      </td>
+      <td style="text-align: center;">6<br>
+      </td>
+      <td style="text-align: center;">Blue<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">2<br>
+      </td>
+      <td style="text-align: center;">← RTS</td>
+      <td style="text-align: center;">7<br>
+      </td>
+      <td style="text-align: center;">Orange<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">3<br>
+      </td>
+      <td style="text-align: center;">GND<br>
+      </td>
+      <td style="text-align: center;">5<br>
+      </td>
+      <td style="text-align: center;">Black<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">4<br>
+      </td>
+      <td style="text-align: center;">←TxD</td>
+      <td style="text-align: center;">3<br>
+      </td>
+      <td style="text-align: center;">Red<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">5<br>
+      </td>
+      <td style="text-align: center;">→ RxD<br>
+      </td>
+      <td style="text-align: center;">2<br>
+      </td>
+      <td style="text-align: center;">Green<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">6<br>
+      </td>
+      <td style="text-align: center;">← DTR<br>
+      </td>
+      <td style="text-align: center;">4<br>
+      </td>
+      <td style="text-align: center;">Yellow<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">7<br>
+      </td>
+      <td style="text-align: center;">→ CTS<br>
+      </td>
+      <td style="text-align: center;">8<br>
+      </td>
+      <td style="text-align: center;">Brown<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">8<br>
+      </td>
+      <td style="text-align: center;">→ DCD<br>
+      </td>
+      <td style="text-align: center;">1<br>
+      </td>
+      <td style="text-align: center;">White/(Grey)<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p><br>
+The Beam Position Monitor is a data-leads-only device.&nbsp; It loops back the RTS/CTS and DSR/DTR lines.<br>
+  <br>
+</p>
+<h1>Front Panel LEMO Connectors</h1>
+<p>There are four 2-pin LEMO connectors on the front panel.&nbsp; Two 
+are wired as outputs from the FPGA and two are wired as inputs.&nbsp; 
+All signal levels are LVDS.&nbsp; The input connectors are improperly 
+labelled and the differential termination is actually 100Ω.<br>
+Output 0 is driven with the reference clock sent to the AFE board.&nbsp;
+ Output 1 is driven with a commutating pilot tone.&nbsp; The input 
+connectors are currently unused.<br>
+<br>
+</p>
+<h1>Front Panel SFP Slots<br>
+</h1>
+
+There are six SFP slots of which five are currently assigned.&nbsp; All links use the Aurora protocol.&nbsp; 
+The cell controller communication links are 8B/10B and operate at 3.125 
+Gb/s. The raw ADC links are 64B/66B and operate at 5.0 Gb/s.<br>
+<br>
+<table style=" text-align: left; width: 528px; height: 233px;" cellspacing="2" cellpadding="2" border="1">
+  <tbody>
+    <tr>
+      <td style="text-align: center;"><span style="font-weight: bold;">SFP</span><span style="font-weight: bold;"><br>
+Number<br>
+        </span><span style="font-weight: bold;"></span><span style="font-weight: bold;">(Schematic)<br>
+        </span></td>
+      <td style="text-align: center;"><span style="font-weight: bold;">Front<br>
+Panel<br>
+Label<br>
+        </span></td>
+      <td style="text-align: center;"><span style="font-weight: bold;">GTX</span><span style="font-weight: bold;"><br>
+        </span></td>
+      <td style="text-align: center;"><span style="font-weight: bold;">Tile</span><br>
+      </td>
+      <td style=" text-align: center;"><span style="font-weight: bold;">Description</span><span style="font-weight: bold;"><br>
+        </span></td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">0<br>
+      </td>
+      <td style="text-align: center;">EVR<br>
+      </td>
+      <td style="text-align: center;">116/3<br>
+      </td>
+      <td style="text-align: center;">X0Y19<br>
+      </td>
+      <td style="text-align: left;">MRF-compatible event link<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">1<br>
+      </td>
+      <td style="vertical-align: middle; text-align: center;">CCW<br>
+      </td>
+      <td style="text-align: center;">116/2<br>
+      </td>
+      <td style="text-align: center;">X0Y18<br>
+      </td>
+      <td style="text-align: left;">Aurora link to CCW neighbor<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">2<br>
+      </td>
+      <td style="text-align: center;">CW<br>
+      </td>
+      <td style="text-align: center;">116/1<br>
+      </td>
+      <td style="text-align: center;">X0Y17<br>
+      </td>
+      <td style="text-align: left;">Aurora link to CW neighbor</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">3<br>
+      </td>
+      <td style="text-align: center;">SFP4<br>
+      </td>
+      <td style="text-align: center;">116/0<br>
+      </td>
+      <td style="text-align: center;">X0Y16<br>
+      </td>
+      <td style="text-align: left;">Unassigned<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">4<br>
+      </td>
+      <td style="text-align: center;">SFP5<br>
+      </td>
+      <td style="text-align: center;">115/3<br>
+      </td>
+      <td style="text-align: center;">X0Y15<br>
+      </td>
+      <td style="text-align: left;">Raw ADC Aurora link, lane 1<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">5<br>
+      </td>
+      <td style="text-align: center;">SFP6<br>
+      </td>
+      <td style="text-align: center;">115/2<br>
+      </td>
+      <td style="text-align: center;">X0Y14<br>
+      </td>
+      <td style="text-align: left;">Raw ADC Aurora link, lane 2<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h1><a name="SerialNumbers"></a>AFE and DFE serial numbers<br>
+</h1>
+The 40-pin DFE debug header (P6) is used to set the serial number of the
+ AFE and DFE cards.&nbsp; Bits 0 through 9 (pins 1, 3, 5, ... 19) set 
+the DFE serial number.&nbsp; Bits 10 through 19 (pins 11, 13, 15, ... 
+39) set the AFE serial number.&nbsp; Connecting a pin to it's 
+even-numbered neighbor (e.g. pin 1 to pin 2) makes that bit a '1'.&nbsp;
+ Unconnected pins are '0'.<br>
+<p>
+</p>
+
+
+
+
+<p></p>
+<ol>
+
+</ol>
+
+
+
+</body></html>
